@@ -13,7 +13,7 @@ from glob import glob
 
 ################################################################################################################
 '''
-This functions are used with vslab based measurement scripts.
+These functions are used with vslab based measurement scripts.
 Typical structrue is
 
 begin_save()

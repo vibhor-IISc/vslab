@@ -222,7 +222,7 @@ class ZVL_VNA(VisaInstrument):
                            label      = 'power',
                            setpoints  = (self.freq_axis,),
                            parameter_class = S21trace,
-                           vals       = vals.Arrays(shape = (self.sweep_points,), valid_types=(np.complex,)),
+                           vals       = vals.Arrays(shape = (self.sweep_points,), valid_types=(np.complex128,)),
                            docstring  = 'Return S21 msmt.'
                            )
 
@@ -238,7 +238,7 @@ class ZVL_VNA(VisaInstrument):
                            label      = 'power',
                            setpoints  = (self.freq_axis,),
                            parameter_class = S21trace_fast,
-                           vals       = vals.Arrays(shape = (self.sweep_points,), valid_types=(np.complex,)),
+                           vals       = vals.Arrays(shape = (self.sweep_points,), valid_types=(np.complex128,)),
                            docstring  = 'Return S21 msmt. Do not use for msmt exceeding 4 seconds'
                            )
 
