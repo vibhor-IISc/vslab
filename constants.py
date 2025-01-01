@@ -24,8 +24,6 @@ import qcodes as qc
 from qcodes import initialise_or_create_database_at
 from qcodes import load_or_create_experiment
 
-_date_time = datetime.now()
-
 
 ###########################################
 ###########################################

@@ -226,35 +226,35 @@ def mcopy(script2copy):
 
 
 
-def mcopy_NEW(destination_path):
-    """
-    Copies the current script or notebook file to the specified destination path.
+# def mcopy_NEW(destination_path):
+#     """
+#     Copies the current script or notebook file to the specified destination path.
 
-    Parameters:
-        destination_path (str): The destination path where the file should be copied.
-    """
-    try:
-        # Attempt to get the current file name (for .py files)
-        current_file_path = os.path.abspath(__file__)
-    except NameError:
-        # If __file__ is not available (likely a Jupyter Notebook), use ipynbname
-        try:
-            import ipynbname
-            current_file_path = str(ipynbname.path())
-        except ModuleNotFoundError:
-            raise RuntimeError("Unable to determine current file. Ensure you are running from a .py script or install 'ipynbname' for notebooks.")
+#     Parameters:
+#         destination_path (str): The destination path where the file should be copied.
+#     """
+#     try:
+#         # Attempt to get the current file name (for .py files)
+#         current_file_path = os.path.abspath(__file__)
+#     except NameError:
+#         # If __file__ is not available (likely a Jupyter Notebook), use ipynbname
+#         try:
+#             import ipynbname
+#             current_file_path = str(ipynbname.path())
+#         except ModuleNotFoundError:
+#             raise RuntimeError("Unable to determine current file. Ensure you are running from a .py script or install 'ipynbname' for notebooks.")
 
-    # Ensure the destination directory exists
-    os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+#     # Ensure the destination directory exists
+#     os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
-    # Copy the file to the destination
-    shutil.copy(current_file_path, destination_path)
-    print(f"File copied to: {destination_path}")
+#     # Copy the file to the destination
+#     shutil.copy(current_file_path, destination_path)
+#     print(f"File copied to: {destination_path}")
 
-# Example usage
-# Provide the path where you want to copy the file (modify as needed)
-destination = "backup/my_copied_file"
-copy_current_file(destination)
+# # Example usage
+# # Provide the path where you want to copy the file (modify as needed)
+# destination = "backup/my_copied_file"
+# copy_current_file(destination)
 
 
 
