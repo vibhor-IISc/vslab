@@ -26,32 +26,34 @@ def print_file_path():
         print("The file path could not be determined (likely running in a notebook).")
 
 
-import json
-import urllib.request
-from jupyter_server import serverapp
+print(print_file_path())
 
-def get_notebook_path():
-    """Finds the path of the currently running Jupyter Notebook."""
-    # Get all running Jupyter servers
-    servers = list(serverapp.list_running_servers())
-    for server in servers:
-        try:
-            sessions_url = server['url'] + 'api/sessions'
-            with urllib.request.urlopen(sessions_url) as response:
-                sessions = json.load(response)
-                for session in sessions:
-                    if session['kernel']['id'] == os.environ['JPY_PARENT_PID']:  # Match by environment variable (this approach links to the Jupyter kernel process)
-                        relative_path = session['notebook']['path']
-                        return os.path.join(server['notebook_dir'], relative_path)
-        except Exception as e:
-            print(f"Could not connect to Jupyter server: {e}")
-    return None
+# import json
+# import urllib.request
+# from jupyter_server import serverapp
 
-# Get the notebook's path
-notebook_path = get_notebook_path()
-if notebook_path:
-    print(f"The notebook's absolute path is: {notebook_path}")
-else:
-    print("Unable to determine notebook path.")
+# def get_notebook_path():
+#     """Finds the path of the currently running Jupyter Notebook."""
+#     # Get all running Jupyter servers
+#     servers = list(serverapp.list_running_servers())
+#     for server in servers:
+#         try:
+#             sessions_url = server['url'] + 'api/sessions'
+#             with urllib.request.urlopen(sessions_url) as response:
+#                 sessions = json.load(response)
+#                 for session in sessions:
+#                     if session['kernel']['id'] == os.environ['JPY_PARENT_PID']:  # Match by environment variable (this approach links to the Jupyter kernel process)
+#                         relative_path = session['notebook']['path']
+#                         return os.path.join(server['notebook_dir'], relative_path)
+#         except Exception as e:
+#             print(f"Could not connect to Jupyter server: {e}")
+#     return None
+
+# # Get the notebook's path
+# notebook_path = get_notebook_path()
+# if notebook_path:
+#     print(f"The notebook's absolute path is: {notebook_path}")
+# else:
+#     print("Unable to determine notebook path.")
 
 
