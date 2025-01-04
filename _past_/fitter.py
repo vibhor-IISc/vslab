@@ -132,14 +132,6 @@ def help(*args):
 				raise Exception("Unrecognized input")
 
 class Fitter(object):
-	'''
-	Use to define the Model.To see the full list use: help()
-	Available methods:
-	.fit()
-	.plot()
-	.save_plot()
-	.save_fit_values()
-	'''
 
 	def __init__(self, func, complex_fit=False):
 		self.method = 'leastsq'
@@ -150,16 +142,12 @@ class Fitter(object):
 				self.params.append(Parameter(name=p, fitter=self))
 
 	def fit(self, xdata, ydata, print_report=False, use_previous_values=False, **kwargs):
-		'''
-		Return result object from lm.minimizer
-
-		'''
 		y = np.copy(ydata)
 		if self.func in lorentzian_func_list:
-			offset = np.average(y[int(0.9*len(y)):len(y)])
-			norm = np.max(y)-offset
-			f0 = xdata[np.argmax(y)]
-			abs_off_y = np.abs((np.abs(y)-np.abs(offset)))
+			offset = np.average(np.abs(y)[int(0.9*len(y)):len(y)])
+			norm = np.max(np.abs(y))-offset
+			f0 = xdata[np.argmax(np.abs(y))]
+			abs_off_y = np.abs((np.abs(y)-offset))
 			kappa = approx_FWHM(xdata, abs_off_y)
 
 		elif self.func in inverted_lorentzian_func_list:
@@ -188,12 +176,12 @@ class Fitter(object):
 				print(p)
 				return np.concatenate((np.real(self.func(xdata, *p)), np.imag(self.func(xdata, *p))))-ydata
 		else:
-			# ydata = np.abs(ydata)
+			ydata = np.abs(ydata)
 			def residual(params):
 				p=[]
 				for key,value in list(params.valuesdict().items()):
 					p.append(value)
-				return np.abs(self.func(xdata, *p)) - y
+				return np.abs(self.func(xdata, *p))-ydata
 
 		lmfit_params = lm.Parameters()
 		for param in self.params:
@@ -275,7 +263,7 @@ class Fitter(object):
 
 	def save_plot(self, fname):
 		'''
-		Saves the last fit figure using Matplotlib
+		Plots the last fit
 		'''
 		param_values = []
 		for param in self.params:
@@ -292,25 +280,16 @@ class Fitter(object):
 		plt.savefig(fname)
 		plt.close()
 
-	def save_fit_values(self, fname, Header = False):
-		'''
-		Write the fit parameters to a file.
-		Use Header = True to write the header information
-		'''
+	def save_fit_values(self, fname):
 		with open(fname, 'w') as f:
-			if Header:
-				f.write('#')
-				for param in self.params:
-					f.write(str(param.name) + '\t')
-			else:
-				f.write('\n')
-				for param in self.params:
-					f.write(str(param.val) + '\t')
-				for param in self.params:
-					f.write(str(param.stderr) + '\t')
+			f.write('#')
+			for param in self.params:
+				f.write(str(param.name) + '\t')
 			f.write('\n')
-			pass
-
+			for param in self.params:
+				f.write(str(param.val) + '\t')
+			for param in self.params:
+				f.write(str(param.stderr) + '\t')
 
 
 class Parameter(object):
@@ -387,7 +366,7 @@ class Data(object):
 				self.y = np.linspace(self.ystart, self.ystop, self.ynpts)
 				self.data = np.array(np.split(self.data, self.ynpts))
 
-			elif self.data.shape[0] == 3:# specially adjusted for Qcodes
+			elif self.data.shape[0] == 3:#for special qcodes
 				self.data = self.data[2]
 				self.y = np.linspace(self.ystart, self.ystop, self.ynpts)
 				self.data = np.array(np.split(self.data, self.ynpts))

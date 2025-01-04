@@ -132,6 +132,14 @@ def help(*args):
 				raise Exception("Unrecognized input")
 
 class Fitter(object):
+	'''
+	Use to define the Model.To see the full list use: help()
+	Available methods:
+	.fit()
+	.plot()
+	.save_plot()
+	.save_fit_values()
+	'''
 
 	def __init__(self, func, complex_fit=False):
 		self.method = 'leastsq'
@@ -139,15 +147,19 @@ class Fitter(object):
 		self.func = func
 		self.params = []
 		for p in inspect.getargspec(func)[0][1:]:
-				self.params.append(Parameter(name=p, fitter=self))
+				self.params.append(_Parameter(name=p, fitter=self))
 
 	def fit(self, xdata, ydata, print_report=False, use_previous_values=False, **kwargs):
+		'''
+		Return result object from lm.minimizer
+
+		'''
 		y = np.copy(ydata)
 		if self.func in lorentzian_func_list:
-			offset = np.average(np.abs(y)[int(0.9*len(y)):len(y)])
-			norm = np.max(np.abs(y))-offset
-			f0 = xdata[np.argmax(np.abs(y))]
-			abs_off_y = np.abs((np.abs(y)-offset))
+			offset = np.average(y[int(0.9*len(y)):len(y)])
+			norm = np.max(y)-offset
+			f0 = xdata[np.argmax(y)]
+			abs_off_y = np.abs((np.abs(y)-np.abs(offset)))
 			kappa = approx_FWHM(xdata, abs_off_y)
 
 		elif self.func in inverted_lorentzian_func_list:
@@ -176,12 +188,12 @@ class Fitter(object):
 				print(p)
 				return np.concatenate((np.real(self.func(xdata, *p)), np.imag(self.func(xdata, *p))))-ydata
 		else:
-			ydata = np.abs(ydata)
+			# ydata = np.abs(ydata)
 			def residual(params):
 				p=[]
 				for key,value in list(params.valuesdict().items()):
 					p.append(value)
-				return np.abs(self.func(xdata, *p))-ydata
+				return np.abs(self.func(xdata, *p)) - y
 
 		lmfit_params = lm.Parameters()
 		for param in self.params:
@@ -263,7 +275,7 @@ class Fitter(object):
 
 	def save_plot(self, fname):
 		'''
-		Plots the last fit
+		Saves the last fit figure using Matplotlib
 		'''
 		param_values = []
 		for param in self.params:
@@ -280,19 +292,28 @@ class Fitter(object):
 		plt.savefig(fname)
 		plt.close()
 
-	def save_fit_values(self, fname):
+	def save_fit_values(self, fname, Header = False):
+		'''
+		Write the fit parameters to a file.
+		Use Header = True to write the header information
+		'''
 		with open(fname, 'w') as f:
-			f.write('#')
-			for param in self.params:
-				f.write(str(param.name) + '\t')
+			if Header:
+				f.write('#')
+				for param in self.params:
+					f.write(str(param.name) + '\t')
+			else:
+				f.write('\n')
+				for param in self.params:
+					f.write(str(param.val) + '\t')
+				for param in self.params:
+					f.write(str(param.stderr) + '\t')
 			f.write('\n')
-			for param in self.params:
-				f.write(str(param.val) + '\t')
-			for param in self.params:
-				f.write(str(param.stderr) + '\t')
+			pass
 
 
-class Parameter(object):
+
+class _Parameter(object):
 
 	def __init__(self, name, fitter, start=None, stop=None, init=None):
 		self.fitter = fitter
@@ -303,119 +324,7 @@ class Parameter(object):
 		self.val = self.init
 		self.stderr = None
 
-class Data(object):
 
-	def __init__(self, fname, dtype=float,
-							 comments='#',
-							 delimiter=None,
-							 converters=None,
-							 skiprows=0,
-							 usecols=None,
-							 unpack=True,
-							 ndmin=0,
-							 encoding=bytes):
-
-		self.data = np.loadtxt(fname, 
-							   dtype=dtype, 
-							   comments=comments, 
-							   delimiter=delimiter, 
-							   converters=converters, 
-							   skiprows=skiprows, 
-							   usecols=usecols, 
-							   unpack=unpack)
-
-		self.read_meta(fname)
-
-		if self.znpts == 1:
-			if self.ynpts == 1:
-				self.dim = 1
-				self.rearrange(1)
-			else:
-				self.dim = 2
-				self.rearrange(2)
-		else:
-			self.dim = 3
-			self.rearrange(3)
-
-	def rearrange(self, dim):
-		self.x = np.linspace(self.xstart, self.xstop, self.xnpts)
-		self.y = [1]
-		self.z = [1]
-
-		if dim == 1:
-			if self.data.shape[0] == 5:
-				# real, imag, abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				if np.abs(self.data[1][0]+1j*self.data[2][0] - self.data[3][0]*np.exp(1j*self.data[4][0])) > 1e-10:
-					raise Exception('Data is probably not in the format [real, imag, abs, phase]')
-				self.data = self.data[3]*np.exp(1j*self.data[4])
-
-			elif self.data.shape[0] == 3:
-				# abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				self.data = self.data[1]*np.exp(1j*self.data[2])
-
-		if dim == 2:
-			if self.data.shape[0] == 6:
-				# real, imag, abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				if np.abs(self.data[2][0]+1j*self.data[3][0] - self.data[4][0]*np.exp(1j*self.data[5][0])) > 1e-10:
-					raise Exception('Data is probably not in the format [real, imag, abs, phase]')
-				self.data = self.data[4]*np.exp(1j*self.data[5])
-
-			elif self.data.shape[0] == 4:
-				# abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				self.data = self.data[2]*np.exp(1j*self.data[3])
-				self.y = np.linspace(self.ystart, self.ystop, self.ynpts)
-				self.data = np.array(np.split(self.data, self.ynpts))
-
-			elif self.data.shape[0] == 3:#for special qcodes
-				self.data = self.data[2]
-				self.y = np.linspace(self.ystart, self.ystop, self.ynpts)
-				self.data = np.array(np.split(self.data, self.ynpts))
-
-		if dim == 3:
-			if self.data.shape[0] == 7:
-				# real, imag, abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				if np.abs(self.data[3][0]+1j*self.data[4][0] - self.data[5][0]*np.exp(1j*self.data[6][0])) > 1e-10:
-					raise Exception('Data is probably not in the format [real, imag, abs, phase]')
-				self.data = self.data[5]*np.exp(1j*self.data[6])
-
-			elif self.data.shape[0] == 5:
-				# abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				self.data = self.data[3]*np.exp(1j*self.data[4])
-			self.z = np.linspace(self.zstart, self.zstop, self.znpts)
-			self.data = np.array([np.split(d, self.znpts) for d in self.data])
-
-		if dim > 3:
-			Exception('Cannot rearrange more than 3 dimensions')
-
-	def read_meta(self, fname):
-		meta = open(fname[:-3]+'meta.txt', 'r')
-		lines = meta.readlines()
-		line = 0
-		def next_line(line):
-			while lines[line][0] == '#':
-				line+=1
-			return line
-		line = next_line(line)
-		self.xnpts = int(lines[line])
-		line = next_line(line+1)
-		self.xstart = float(lines[line])
-		line = next_line(line+1)
-		self.xstop = float(lines[line])
-		line = next_line(line+1)
-		line = next_line(line+1)
-		self.ynpts = int(lines[line])
-		line = next_line(line+1)
-		self.ystart = float(lines[line])
-		line = next_line(line+1)
-		self.ystop = float(lines[line])
-		line = next_line(line+1)
-		line = next_line(line+1)
-		self.znpts = int(lines[line])
-		line = next_line(line+1)
-		self.zstart = float(lines[line])
-		line = next_line(line+1)
-		self.zstop = float(lines[line])
-		meta.close()
 
 # x = np.linspace(-6, 6, 100)
 # plt.plot(x, np.abs(normalizedComplexRootLorentzian(x, 0, 2)))
