@@ -131,5 +131,11 @@ class Data2D:
     
         # Rearrange data to (len(inner_loop), len(outer_loop))
         return data.reshape((outer_npts, inner_npts))
+    
+    def Z(self, column_index, **kwargs):
+        return self.read_column(column_index, **kwargs)
+    
+    def SaveNpy():
+        pass
 
 
