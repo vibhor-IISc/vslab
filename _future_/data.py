@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import xarray as xr
 
 class Data2D:
     def __init__(self, directory):
@@ -84,20 +85,21 @@ class Data2D:
     def get_num_data_columns(self):
         return self.num_data_columns
 
-    def _X(self):
+    def _Y(self):
         meta_in, _, _ = self.meta_data
         npts, start, stop = meta_in[:3]
         self.X = np.linspace(start, stop, npts)
         
 
-    def _Y(self):
+    def _X(self):
         _, meta_out, _ = self.meta_data
         npts, start, stop = meta_out[:3]
         self.Y = np.linspace(start, stop, npts)
     
     def read_column(self, column_index, **kwargs):
         """
-        Reads a specific column from the .dat file and rearranges it to the size (len(inner_loop), len(outer_loop)).
+        Reads a specific column from the .dat file and rearranges 
+        it to the size (len(inner_loop), len(outer_loop)).
     
         Parameters
         ----------
@@ -112,15 +114,15 @@ class Data2D:
             The rearranged array of size (len(inner_loop), len(outer_loop)).
         """
         
-        if not (0 <= column_index < self.num_data_columns):
+        if not (0 <= column_index <  self.numeric_columns):
             raise ValueError(f"Invalid column index {column_index}. Must be between 0 and {self.num_data_columns - 1}.")
 
 
     
         # Extract inner and outer dimensions from metadata
         meta_in, meta_out, dims = self.meta_data
-        inner_npts = meta_in[0]
-        outer_npts = meta_out[0] if dims >= 2 else 1
+        inner_npts = len(self.X)
+        outer_npts = len(self.Y)
     
 
         data = np.loadtxt(self.data_file, usecols=[column_index], **kwargs)
@@ -135,7 +137,87 @@ class Data2D:
     def Z(self, column_index, **kwargs):
         return self.read_column(column_index, **kwargs)
     
-    def SaveNpy():
-        pass
+    
+    
+    
+def SaveNpy(dir_path):
+    '''
+    Parameters
+    ----------
+    dir_path : directoty where .dat and .meta.txt file lives.
+
+    Returns
+    -------
+    Save X, Y, all Z columns in numpy arrays in the same directory
+    
+    In future we should update a new function, which saves
+    everthing in more managable binary container like xarray
+    Numpy arrays have fixed size issue, and any other approach
+    in my opinion will never be as fast. 
+
+    '''
+    
+    d = Data2D(dir_path)
+    
+    # Saving X array
+    filename_x = d.data_file[:-4]+'_X1'+'.npy'
+    np.save(filename_x, d.X)
+    
+    # Saving Y array
+    filename_y = d.data_file[:-4]+'_Y2'+'.npy'
+    np.save(filename_y, d.Y)
+    
+    # Saving Z arrays
+    for i in np.arange(d.num_data_columns):
+        filename = d.data_file[:-4]+f'_Z{i+2}'+'.npy'
+        np.save(filename, d.Z(2+i))
+    
+    print('All .npy files written to disk.')
+    pass
+
+    
+
+
+def SaveHD5(dir_path):
+    '''
+
+    Parameters
+    ----------
+    dir_path : directoty where .dat and .meta.txt file lives.
+
+    Returns
+    -------
+    Reoranize the .dat file into a .h5 file with all Z columns, and Coordinates
+    
+    In future we shd update the coord names from meta. 
+
+    '''
+    d = Data2D(dir_path)
+    
+    # Combining different Z columns
+    data_vars = {}
+    for i in np.arange(d.num_data_columns):
+        data_vars[f"Z{2+i}"] = (["Y", "X"], d.Z(2+i))
+        
+    # Creating a Xarray dataset with coordinates
+    ds = xr.Dataset(data_vars, coords = {"Y": d.Y, "X": d.X})
+    
+    # Writing the Dataset to disk using h5 format
+    file_name = d.data_file[:-4]+'.hd5'
+    ds.to_netcdf(file_name, engine="h5netcdf")
+    print('.h5 written to disk.')
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
 
 

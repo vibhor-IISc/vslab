@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 
 pth = '/Users/vibhor/Downloads/vslabtest'
 d = Data2D(pth)
-dd = d.read_column(2)
+# dd = d.read_column(2)
 
 
-plt.plot(d.X, dd[0])
+# plt.plot(d.X, dd[0])
 
-res = Fitter(normalized_complex_root_lorentzian)
+# res = Fitter(normalized_complex_root_lorentzian)
