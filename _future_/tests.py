@@ -13,6 +13,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+import xarray as xr
+
+
 pth = '/Users/vibhor/Downloads/vslabtest'
 d = Data2D(pth)
 # dd = d.read_column(2)
@@ -21,3 +24,9 @@ d = Data2D(pth)
 # plt.plot(d.X, dd[0])
 
 # res = Fitter(normalized_complex_root_lorentzian)
+
+
+# Load HDF5
+ds_loaded = xr.open_dataset(pth, engine="h5netcdf")
+
+print(ds_loaded)

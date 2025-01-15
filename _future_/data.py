@@ -203,7 +203,7 @@ def SaveHD5(dir_path):
     ds = xr.Dataset(data_vars, coords = {"Y": d.Y, "X": d.X})
     
     # Writing the Dataset to disk using h5 format
-    file_name = d.data_file[:-4]+'.hd5'
+    file_name = d.data_file[:-4]+'.h5'
     ds.to_netcdf(file_name, engine="h5netcdf")
     print('.h5 written to disk.')
     pass
