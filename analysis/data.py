@@ -1,3 +1,5 @@
+import numpy as np
+
 class Data(object):
 
 	def __init__(self, fname, dtype=float,
