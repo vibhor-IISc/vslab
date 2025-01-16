@@ -14,7 +14,10 @@ initial_array = None
 # Widgets
 file_input = FileInput(accept=".h5")
 layer_select = Select(title="Select Layer:", value="", options=[])
-palette_options = ["Viridis256", "Inferno256", "Plasma256"]
+palette_options = ["Viridis256", 
+                   "Inferno256", 
+                   "Plasma256", 
+                   ]
 palette_select = Select(title="Select Palette:", value="Viridis256", options=palette_options)
 row_slider = Slider(start=0, end=1, value=0, step=1, title="Row Index")
 col_slider = Slider(start=0, end=1, value=0, step=1, title="Column Index")
