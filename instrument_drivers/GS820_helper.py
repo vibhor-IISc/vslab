@@ -15,15 +15,16 @@ mA = 1e-3
 
 def increment(gs820, chn = 1):
     value = float(gs820.ask(f"CHAN{chn}:SOUR:RANG?"))
-    # Sweeping current
-    if 1e-6 <= value < 1e-3:
-        incr = 0.01*uA
-    elif 1e-9 <= value < 1e-6:
-        incr = 0.01*nA
-    elif value >= 1e-3:
-        incr = 0.1*mA
-        pass
-    return incr
+    return 0.02*value
+    # # Sweeping current
+    # if 1e-6 <= value < 1e-3:
+    #     incr = 0.1*uA
+    # elif 1e-9 <= value < 1e-6:
+    #     incr = 0.1*nA
+    # elif value >= 1e-3:
+    #     incr = 0.1*mA
+    #     pass
+    # return incr
 
 def GS820sweepCurrTo(gs820, chn=1,  setI=0 ):
     incr = increment(gs820, chn)
@@ -88,7 +89,7 @@ def GS820GetIV(gs820, chn=1, start=-20e-3, stop=20e-3, pnts = 100, both=False):
         
     return voltages, np.array(currents)
 
-def GS820GetVI(gs820, chn=1, start=-10e-9, stop=10e-9, pnts = 101, both=False,  avg = 2, W4=False):
+def GS820GetVI(gs820, chn=1, start=-10e-9, stop=10e-9, pnts = 101, both=True,  avg = 2, W4=False):
     currents = np.linspace(start,stop,pnts)
     if W4:
         gs820.write(f'CHAN{chn}:SENS:REM 1')
@@ -102,9 +103,9 @@ def GS820GetVI(gs820, chn=1, start=-10e-9, stop=10e-9, pnts = 101, both=False,  
         GS820sweepCurrTo(gs820, chn=1, setI=current )
         vv = 0
         for val in range(avg):
-            time.sleep(0.05)
+            time.sleep(0.03)
             vv = vv + float(gs820.ask(f'CHAN{chn}:MEAS?'))
-            time.sleep(0.05)
+            time.sleep(0.03)
             dummy = gs820.ask('*OPC?')
             pass
         voltage = vv/avg

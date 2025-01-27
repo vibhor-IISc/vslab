@@ -55,11 +55,11 @@ class YokogawaChannel(InstrumentChannel):
 
         """
 
-        if channel not in ["CH1", "CH2"]:
-            raise ValueError('channel must be either "CH1" or "CH2"')
+        if channel not in ["CHAN1", "CHAN2"]:
+            raise ValueError('channel must be either "CHAN1" or "CHAN2"')
 
         super().__init__(parent, name, **kwargs)
-        self.model = self._parent.model
+        # self.model = self._parent.model
 
 
 
@@ -67,7 +67,7 @@ class YokogawaChannel(InstrumentChannel):
             "mode",
             get_cmd=f"{channel}:SOUR:FUNC?;*WAI",
             get_parser=str.strip,
-            set_cmd=f"{channel}:SOUR:FUNC {}",
+            set_cmd=f"{channel}:SOUR:FUNC {{}}",
             val_mapping={"current": "CURR", "voltage": "VOLT"},
             docstring="Selects the type of source e.g. 'voltage' or 'current' .",
         )
@@ -99,10 +99,10 @@ class YokogawaChannel(InstrumentChannel):
             "volt_range",
             get_cmd=f"{channel}:SOUR:VOLT:RANG?;*WAI",
             get_parser=float,
-            set_cmd=f"{channel}:SOUR:VOLT:RANG {}",
+            set_cmd=f"{channel}:SOUR:VOLT:RANG {{}}",
             label="Voltage Range",
             unit="V",
-            vals = vals.Enum(*np.array(200e-3, 2, 7, 18)),
+            vals = vals.Enum(*np.array([200e-3, 2, 7, 18])),
             docstring="Get/Set the voltage range",
         )
         """Parameter volt_range"""
@@ -111,10 +111,10 @@ class YokogawaChannel(InstrumentChannel):
             "curr_range",
             get_cmd=f"{channel}:SOUR:CURR:RANG?;*WAI",
             get_parser=float,
-            set_cmd=f"{channel}:SOUR:CURR:RANG {}",
+            set_cmd=f"{channel}:SOUR:CURR:RANG {{}}",
             label="Current Range",
             unit="A",
-            vals = vals.Enum(*np.array(200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3)),
+            vals = vals.Enum(*np.array([200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3])),
             docstring="Get/Set the current range",
         )
         """Parameter curr_range"""
@@ -123,10 +123,10 @@ class YokogawaChannel(InstrumentChannel):
             "measure_volt_range",
             get_cmd=f"{channel}:SENS:VOLT:RANG?;*WAI",
             get_parser=float,
-            set_cmd=f"{channel}:SENS:VOLT:RANG {}",
+            set_cmd=f"{channel}:SENS:VOLT:RANG {{}}",
             label="Measure Voltage Range",
             unit="V",
-            vals = vals.Enum(*np.array(200e-3, 2, 7, 18)),
+            vals = vals.Enum(*np.array([200e-3, 2, 7, 18])),
             docstring="Get/Set the measure voltage range",
         )
         """Parameter measure volt_range"""
@@ -135,10 +135,10 @@ class YokogawaChannel(InstrumentChannel):
             "measure_curr_range",
             get_cmd=f"{channel}:SENS:CURR:RANG?;*WAI",
             get_parser=float,
-            set_cmd=f"{channel}:SENS:CURR:RANG {}",
+            set_cmd=f"{channel}:SENS:CURR:RANG {{}}",
             label="Measure Current Range",
             unit="A",
-            vals = vals.Enum(*np.array(200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3)),
+            vals = vals.Enum(*np.array([200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3])),
             docstring="Get/Set the measure current range",
         )
         """Parameter curr_range"""
@@ -147,7 +147,7 @@ class YokogawaChannel(InstrumentChannel):
             "volt_limit",
             get_cmd=f"{channel}:SOUR:VOLT:PROT:LEV?;*WAI",
             get_parser=float,
-            set_cmd=f"{channel}:SOUR:VOLT:PROT:LEV {}",
+            set_cmd=f"{channel}:SOUR:VOLT:PROT:LEV {{}}",
             label="Voltage limit",
             unit="V",
             vals = vals.Numbers(min_value = 5e-3, max_value = 18),
@@ -159,7 +159,7 @@ class YokogawaChannel(InstrumentChannel):
             "curr_limit",
             get_cmd=f"{channel}:SOUR:CURR:PROT:LEV?;*WAI",
             get_parser=float,
-            set_cmd=f"{channel}:SOUR:CURR:PROT:LEV {}",
+            set_cmd=f"{channel}:SOUR:CURR:PROT:LEV {{}}",
             label="Current",
             unit="A",
             # vals = vals.Enum(*np.array(200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3)),
@@ -179,7 +179,7 @@ class YokogawaChannel(InstrumentChannel):
             "wire2or4",
             get_cmd=f"{channel}:SENS:REM?;*WAI",
             get_parser=float,
-            set_cmd=f"{channel}:SENS:REM {}",
+            set_cmd=f"{channel}:SENS:REM {{}}",
             vals = vals.Bool(),
             val_mapping={"on": 1, "off": 0},
             docstring = "Get/Set 4wire (true or 1) or 2wire (false or 0)",
@@ -304,12 +304,8 @@ class YokogawaChannel(InstrumentChannel):
 class GS820(VisaInstrument):
     """
     This is the qcodes driver for the Yokogawa GS820 Source-Meter series.
-    Add more verbose later. 
-
+    Add more verbose later.
     """
-
-    default_terminator = "\n"
-
     def __init__(
         self, name: str, address: str, **kwargs: "Unpack[VisaInstrumentKWArgs]"
     ) -> None:
@@ -324,18 +320,14 @@ class GS820(VisaInstrument):
 
 
         # Add the channel to the instrument
-        for ch in ["CH1", "CH2"]:
+        for ch in ["CHAN1", "CHAN2"]:
             ch_name = f"{ch}"
             channel = YokogawaChannel(self, ch_name, ch_name)
             self.add_submodule(ch_name, channel)
-            pass
-        
         
         
         self.add_function('reset', call_cmd='*RST;*WAI')
-
         self.connect_message()
-
 
     def iscomplete(self):
         _start_time = perf_counter()
