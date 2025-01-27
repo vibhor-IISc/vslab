@@ -1,0 +1,24 @@
+#inner loop
+301
+5690000000.0
+5990000000.0
+Frequency (Hz)
+#outer loop
+201
+0.01
+-0.01
+Current (A)
+#outermost loop (unused)
+1
+0
+1
+Nothing
+#for each of the values
+3
+S21 abs
+4
+S21 real
+5
+S21 imag
+6
+S21 phase
