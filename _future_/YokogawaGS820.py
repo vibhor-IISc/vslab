@@ -18,17 +18,17 @@ from qcodes.instrument import (
 from qcodes.parameters import (
     ArrayParameter,
     Parameter,
-    ParameterWithSetpoints,
-    ParamRawDataType,
+    # ParameterWithSetpoints,
+    # ParamRawDataType,
     create_on_off_val_mapping,
 )
 
 
-if TYPE_CHECKING:
-    from collections.abc import Sequence
+# if TYPE_CHECKING:
+#     from collections.abc import Sequence
 
-    from qcodes_loop.data.data_set import DataSet
-    from typing_extensions import Unpack
+#     from qcodes_loop.data.data_set import DataSet
+#     from typing_extensions import Unpack
 
 
 class YokogawaChannel(InstrumentChannel):
@@ -306,6 +306,9 @@ class GS820(VisaInstrument):
     This is the qcodes driver for the Yokogawa GS820 Source-Meter series.
     Add more verbose later.
     """
+    
+    default_terminator = "\n"
+    
     def __init__(
         self, name: str, address: str, **kwargs: "Unpack[VisaInstrumentKWArgs]"
     ) -> None:
