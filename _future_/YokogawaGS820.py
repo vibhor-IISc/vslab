@@ -59,154 +59,137 @@ class YokogawaChannel(InstrumentChannel):
             raise ValueError('channel must be either "CHAN1" or "CHAN2"')
 
         super().__init__(parent, name, **kwargs)
-        # self.model = self._parent.model
-
-
-
-        self.mode = self.add_parameter(
-            "mode",
-            get_cmd=f"{channel}:SOUR:FUNC?;*WAI",
-            get_parser=str.strip,
-            set_cmd=f"{channel}:SOUR:FUNC {{}}",
-            val_mapping={"current": "CURR", "voltage": "VOLT"},
-            docstring="Selects the type of source e.g. 'voltage' or 'current' .",
-        )
-        """Parameter mode"""
-
-        self.volt = self.add_parameter(
-            "volt",
-            get_cmd=f"{channel}:SOUR:VOLT:LEV?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SOUR:VOLT:LEV {{:.6f}}",
-            label="Voltage",
-            unit="V",
-            docstring="Get/Set the voltage",
-        )
-        """Parameter volt"""
-
-        self.curr = self.add_parameter(
-            "curr",
-            get_cmd=f"{channel}:SOUR:CURR:LEV?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SOUR:CURR:LEV {{:.6f}}",
-            label="Current",
-            unit="A",
-            docstring="Get/Set the current.",
-        )
-        """Parameter curr"""
-        
-        self.volt_range = self.add_parameter(
-            "volt_range",
-            get_cmd=f"{channel}:SOUR:VOLT:RANG?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SOUR:VOLT:RANG {{}}",
-            label="Voltage Range",
-            unit="V",
-            vals = vals.Enum(*np.array([200e-3, 2, 7, 18])),
-            docstring="Get/Set the voltage range",
-        )
-        """Parameter volt_range"""
-        
-        self.curr_range = self.add_parameter(
-            "curr_range",
-            get_cmd=f"{channel}:SOUR:CURR:RANG?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SOUR:CURR:RANG {{}}",
-            label="Current Range",
-            unit="A",
-            vals = vals.Enum(*np.array([200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3])),
-            docstring="Get/Set the current range",
-        )
-        """Parameter curr_range"""
-        
-        self.measure_volt_range = self.add_parameter(
-            "measure_volt_range",
-            get_cmd=f"{channel}:SENS:VOLT:RANG?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SENS:VOLT:RANG {{}}",
-            label="Measure Voltage Range",
-            unit="V",
-            vals = vals.Enum(*np.array([200e-3, 2, 7, 18])),
-            docstring="Get/Set the measure voltage range",
-        )
-        """Parameter measure volt_range"""
-        
-        self.measure_curr_range = self.add_parameter(
-            "measure_curr_range",
-            get_cmd=f"{channel}:SENS:CURR:RANG?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SENS:CURR:RANG {{}}",
-            label="Measure Current Range",
-            unit="A",
-            vals = vals.Enum(*np.array([200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3])),
-            docstring="Get/Set the measure current range",
-        )
-        """Parameter curr_range"""
-
-        self.volt_limit = self.add_parameter(
-            "volt_limit",
-            get_cmd=f"{channel}:SOUR:VOLT:PROT:LEV?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SOUR:VOLT:PROT:LEV {{}}",
-            label="Voltage limit",
-            unit="V",
-            vals = vals.Numbers(min_value = 5e-3, max_value = 18),
-            docstring="Get/Set the voltage limit for the current source operation",
-        )
-        """Parameter volt_limit"""
-        
-        self.curr_limit = self.add_parameter(
-            "curr_limit",
-            get_cmd=f"{channel}:SOUR:CURR:PROT:LEV?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SOUR:CURR:PROT:LEV {{}}",
-            label="Current",
-            unit="A",
-            # vals = vals.Enum(*np.array(200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3)),
-            docstring="Get/Set the current limit for the voltage source operation",
-        )
-        """Parameter curr_limit"""
-                
-        self.measure = self.add_parameter(
-            "measure",
-            get_cmd=f"{channel}:MEAS?;*WAI",
-            get_parser=float,
-            docstring="Get the measured result",
-        )
-        """Parameter measure"""
-        
-        self.wire2or4 = self.add_parameter(
-            "wire2or4",
-            get_cmd=f"{channel}:SENS:REM?;*WAI",
-            get_parser=float,
-            set_cmd=f"{channel}:SENS:REM {{}}",
-            vals = vals.Bool(),
-            val_mapping={"on": 1, "off": 0},
-            docstring = "Get/Set 4wire (true or 1) or 2wire (false or 0)",
-        )
-        """Parameter W2 or W4"""
-
-        self.output = self.add_parameter(
-            "output",
-            get_cmd=f"{channel}:SOUR:OUTP?;*WAI",
-            get_parser=bool,
-            set_cmd=f"{channel}.source.output={{:d}}",
-            val_mapping={"on": 1, "off": 0},
-            docstring="Get/Set output to  ON (1)/OFF(0)",
-        )
-        """Parameter output"""
 
         self.channel = channel
-             
-    def configIV(self, voltage_range = 200e-3, 
-                 measure_current_range = 1e-3 ,
+
+        self.source_mode = self.add_parameter("source_mode",
+                          get_cmd=f"{channel}:SOUR:FUNC?;*WAI",
+                          get_parser=str.strip,
+                          set_cmd=f"{channel}:SOUR:FUNC {{}}",
+                          val_mapping={"current": "CURR", "voltage": "VOLT"},
+                          docstring="Selects the type of SOURCE e.g. 'voltage' or 'current'.",
+                          )
+        
+        self.sense_mode = self.add_parameter("sense_mode",
+                          get_cmd=f"{channel}:SENS:FUNC?;*WAI",
+                          get_parser=str.strip,
+                          set_cmd=f"{channel}:SENS:FUNC {{}}",
+                          val_mapping={"current": "CURR", "voltage": "VOLT"},
+                          docstring="Selects the type of SENSE e.g. 'voltage' or 'current'.",
+                          )
+
+        self.source_volt = self.add_parameter("source_volt",
+                           get_cmd=f"{channel}:SOUR:VOLT:LEV?;*WAI",
+                           get_parser=float,
+                           set_cmd=f"{channel}:SOUR:VOLT:LEV {{:.6f}}",
+                           label="Voltage",
+                           unit="V",
+                           docstring="Get/Set the source voltage",
+                           )
+
+        self.source_curr = self.add_parameter("source_curr",
+                    get_cmd=f"{channel}:SOUR:CURR:LEV?;*WAI",
+                    get_parser=float,
+                    set_cmd=f"{channel}:SOUR:CURR:LEV {{:.6f}}",
+                    label="Current",
+                    unit="A",
+                    docstring="Get/Set the source current.",
+                    )
+        
+        self.source_volt_range = self.add_parameter("source_volt_range",
+                        get_cmd=f"{channel}:SOUR:VOLT:RANG?;*WAI",
+                        get_parser=float,
+                        set_cmd=f"{channel}:SOUR:VOLT:RANG {{}}",
+                        label="Voltage Range",
+                        unit="V",
+                        vals = vals.Enum(*np.array([200e-3, 2, 7, 18])),
+                        docstring="Get/Set the source voltage range",
+                        )
+        
+        self.source_curr_range = self.add_parameter("source_curr_range",
+                        get_cmd=f"{channel}:SOUR:CURR:RANG?;*WAI",
+                        get_parser=float,
+                        set_cmd=f"{channel}:SOUR:CURR:RANG {{}}",
+                        label="Current Range",
+                        unit="A",
+                        vals = vals.Enum(*np.array([200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3])),
+                        docstring="Get/Set the source current range",
+                        )
+        
+        self.sense_volt_range = self.add_parameter("sense_volt_range",
+                                get_cmd=f"{channel}:SENS:VOLT:RANG?;*WAI",
+                                get_parser=float,
+                                set_cmd=f"{channel}:SENS:VOLT:RANG {{}}",
+                                label="Measure Voltage Range",
+                                unit="V",
+                                vals = vals.Enum(*np.array([200e-3, 2, 7, 18])),
+                                docstring="Get/Set the sense voltage range",
+                                )
+        
+        self.sense_curr_range = self.add_parameter("sense_curr_range",
+                                get_cmd=f"{channel}:SENS:CURR:RANG?;*WAI",
+                                get_parser=float,
+                                set_cmd=f"{channel}:SENS:CURR:RANG {{}}",
+                                label="Measure Current Range",
+                                unit="A",
+                                vals = vals.Enum(*np.array([200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3])),
+                                docstring="Get/Set the sense current range",
+                                )
+
+        self.volt_limit = self.add_parameter("volt_limit",
+                            get_cmd=f"{channel}:SOUR:VOLT:PROT:LEV?;*WAI",
+                            get_parser=float,
+                            set_cmd=f"{channel}:SOUR:VOLT:PROT:LEV {{}}",
+                            label="Voltage limit",
+                            unit="V",
+                            vals = vals.Numbers(min_value = 5e-3, max_value = 18),
+                            docstring="Get/Set the voltage limit for the current source operation",
+                            )
+        
+        self.curr_limit = self.add_parameter("curr_limit",
+                            get_cmd=f"{channel}:SOUR:CURR:PROT:LEV?;*WAI",
+                            get_parser=float,
+                            set_cmd=f"{channel}:SOUR:CURR:PROT:LEV {{}}",
+                            label="Current",
+                            unit="A",
+                            vals = vals.Enum(*np.array(200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3)),
+                            docstring="Get/Set the current limit for the voltage source operation",
+                            )
+
+                
+        self.measure = self.add_parameter("measure",
+                            get_cmd=f"{channel}:MEAS?;*WAI",
+                            get_parser=float,
+                            docstring="Get the measured result",
+                            )
+        
+        self.wire2or4 = self.add_parameter("wire2or4",
+                            get_cmd=f"{channel}:SENS:REM?;*WAI",
+                            get_parser=float,
+                            set_cmd=f"{channel}:SENS:REM {{}}",
+                            vals = vals.Bool(),
+                            val_mapping={"on": 1, "off": 0},
+                            docstring = "Get/Set 4wire (true or 1) or 2wire (false or 0)",
+                            )
+
+        self.output = self.add_parameter("output",
+                            get_cmd=f"{channel}:SOUR:OUTP?;*WAI",
+                            get_parser=bool,
+                            set_cmd=f"{channel}.source.output={{:d}}",
+                            val_mapping={"on": 1, "off": 0},
+                            docstring="Get/Set output to  ON (1)/OFF(0)",
+                            )
+        
+
+    def configIV(self, source_voltage_range = 200e-3, 
+                 sense_current_range = 1e-3 ,
                  current_limit=10e-3):
         '''
         Parameters
         ----------
-        voltage_range : TYPE, optional
+        source_voltage_range : TYPE, optional
             DESCRIPTION. The default is 200e-3.
-        measure_current_range : TYPE, optional
+        sense_current_range : TYPE, optional
             DESCRIPTION. The default is 1e-3.
         current_limit : TYPE, optional
             DESCRIPTION. The default is 10e-3.
@@ -214,23 +197,23 @@ class YokogawaChannel(InstrumentChannel):
         -------
         Configure to set voltage and measure current
         '''
-        self.mode('voltage')
-        self.volt(0.0)
-        self.volt_range(voltage_range)
-        self.measure_curr_range(measure_current_range)
+        self.source_mode('voltage')
+        self.source_volt(0.0)
+        self.source_volt_range(source_voltage_range)
+        self.sense_curr_range(sense_current_range)
         self.curr_limit(current_limit)
         pass
     
-    def configVI(self, current_range=1e-6, 
-                 measure_voltage_range = 200e-3, 
+    def configVI(self, source_current_range=1e-6, 
+                 sense_voltage_range = 200e-3, 
                  voltage_limit=10e-3,
                  W4=0):
         '''
         Parameters
         ----------
-        current_range : TYPE, optional
+        source_current_range : TYPE, optional
             DESCRIPTION. The default is 1e-6.
-        measure_voltage_range : TYPE, optional
+        sense_voltage_range : TYPE, optional
             DESCRIPTION. The default is 200e-3.
         voltage_limit : TYPE, optional
             DESCRIPTION. The default is 10e-3.
@@ -242,14 +225,39 @@ class YokogawaChannel(InstrumentChannel):
         Configure to set current and measure voltage.
         Default 2W measurement.
         '''
-        self.mode('current')
-        self.curr(0.0)
-        self.curr_range(current_range)
-        self.measure_volt_range(measure_voltage_range)
+        self.source_mode('current')
+        self.source_curr(0.0)
+        self.source_curr_range(source_current_range)
+        self.sense_volt_range(sense_voltage_range)
         self.volt_limit(voltage_limit)
         self.wire2or4(W4)        
         pass
-    
+
+    def setTo(self, value):
+        if self.source_mode.get() == 'current' and self.source_curr_range.get() >= np.abs(value):
+            self.source_curr(value)
+        if self.source_mode.get() == 'voltage' and self.source_volt_range.get() >= np.abs(value):
+            self.source_volt(value)
+        else:
+            raise Exception('Failed! Could not determine the source type.')
+
+
+--> a toggle type cmd, needs some more thinking for implementation
+
+    def source_range_auto(self, value):
+        if self.source_mode.get() == 'current':
+            self.write(f'{self.channel}:SOUR:CURR:RANG AUTO')
+        if self.source_mode.get() == 'voltage':
+            pass
+        else:
+            raise Exception('Failed! Could not determine the source type.')
+
+
+
+
+
+
+
     def sweepTo(self, target_value = 0,step_factor=0.01, timeout=5):
         '''
         Parameters
@@ -266,36 +274,35 @@ class YokogawaChannel(InstrumentChannel):
         '''
         _start_time = perf_counter()
 
-        if self.mode.get() == 'current':
-            _range = self.curr_range()
-            _value = self.curr()
+        if self.source_mode.get() == 'current':
+            _range = self.souce_curr_range()
+            _value = self.source_curr()
             
             sign = np.sign(target_value - _value)
-            while np.abs(self.curr() - target_value) > step_factor*_range:
-                now = self.curr()
+            while np.abs(self.source_curr() - target_value) > step_factor*_range:
+                now = self.source_curr()
                 sleep(0.03)
-                self.curr(now + sign*step_factor*_range)
-            if np.abs(self.curr() - target_value) <=step_factor*_range:
-                self.curr(target_value)
+                self.source_curr(now + sign*step_factor*_range)
+            if np.abs(self.source_curr() - target_value) <=step_factor*_range:
+                self.source_curr(target_value)
                 return 
             if perf_counter()-_start_time > timeout:
                 raise TimeoutError("Failed to reach the target value")
-        elif self.mode.get() == 'voltage':
-            _range = self.volt_range()
-            _value = self.volt()
+        elif self.source_mode.get() == 'voltage':
+            _range = self.source_volt_range()
+            _value = self.source_volt()
             sign = np.sign(target_value - _value)
-            while np.abs(self.volt() - target_value) > step_factor*_range:
-                now = self.volt()
+            while np.abs(self.source_volt() - target_value) > step_factor*_range:
+                now = self.source_volt()
                 sleep(0.03)
-                self.volt(now + sign*step_factor*_range)
-            if np.abs(self.volt() - target_value) <= step_factor*_range:
-                self.volt(target_value)
+                self.source_volt(now + sign*step_factor*_range)
+            if np.abs(self.source_volt() - target_value) <= step_factor*_range:
+                self.source_volt(target_value)
                 return
             if perf_counter - _start_time > timeout:
                 raise TimeoutError("Failed to reach the target value")
         else:
             raise Exception("Unable to determine the mode")
-        pass
     
 
 
