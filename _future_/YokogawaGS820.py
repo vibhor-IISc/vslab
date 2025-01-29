@@ -234,6 +234,15 @@ class YokogawaChannel(InstrumentChannel):
         pass
 
     def setTo(self, value):
+        '''
+        Parameters
+        ----------
+        value : TYPE
+            set value of the source.
+        Returns
+        -------
+        None.
+        '''
         if self.source_mode.get() == 'current' and self.source_curr_range.get() >= np.abs(value):
             self.source_curr(value)
         if self.source_mode.get() == 'voltage' and self.source_volt_range.get() >= np.abs(value):
@@ -241,21 +250,33 @@ class YokogawaChannel(InstrumentChannel):
         else:
             raise Exception('Failed! Could not determine the source type.')
 
-
---> a toggle type cmd, needs some more thinking for implementation
-
-    def source_range_auto(self, value):
+    def source_range_auto_toggle(self):
+        '''
+        Toggle the source range between Auto and Manual
+        Returns
+        -------
+        None.
+        '''
         if self.source_mode.get() == 'current':
-            self.write(f'{self.channel}:SOUR:CURR:RANG AUTO')
+            self.write(f'{self.channel}:SOUR:CURR:RANG:AUTO')
         if self.source_mode.get() == 'voltage':
-            pass
+            self.write(f'{self.channel}:SOUR:VOLT:RANG:AUTO')
         else:
             raise Exception('Failed! Could not determine the source type.')
 
-
-
-
-
+    def sense_range_auto_toggle(self):
+        '''
+        Toggle the sense range between Auto and Manual
+        Returns
+        -------
+        None.
+        '''
+        if self.sense_mode.get() == 'current':
+            self.write(f'{self.channel}:SENS:CURR:RANG:AUTO')
+        if self.sense_mode.get() == 'voltage':
+            self.write(f'{self.channel}:SENS:VOLT:RANG:AUTO')
+        else:
+            raise Exception('Failed! Could not determine the source type.')
 
 
     def sweepTo(self, target_value = 0,step_factor=0.01, timeout=5):
@@ -270,7 +291,8 @@ class YokogawaChannel(InstrumentChannel):
             DESCRIPTION. The default is 5 seconds.
         Returns
         -------
-        Sweep the channel output to target_value
+        Sweep the channel output to target_value within 4 seconds.
+        DO NOT USE WITH AUTO RANGE.
         '''
         _start_time = perf_counter()
 
@@ -304,8 +326,6 @@ class YokogawaChannel(InstrumentChannel):
         else:
             raise Exception("Unable to determine the mode")
     
-
-
 
 
 class GS820(VisaInstrument):
