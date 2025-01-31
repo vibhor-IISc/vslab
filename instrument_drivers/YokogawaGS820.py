@@ -1,12 +1,6 @@
-import logging
-import struct
-import sys
-import warnings
-from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
-
 import numpy as np
-from time import sleep, perf_counter
+import time
+from time import perf_counter
 
 import qcodes.validators as vals
 from qcodes.instrument import (
@@ -18,17 +12,8 @@ from qcodes.instrument import (
 from qcodes.parameters import (
     ArrayParameter,
     Parameter,
-    # ParameterWithSetpoints,
-    # ParamRawDataType,
     create_on_off_val_mapping,
 )
-
-
-# if TYPE_CHECKING:
-#     from collections.abc import Sequence
-
-#     from qcodes_loop.data.data_set import DataSet
-#     from typing_extensions import Unpack
 
 
 class YokogawaChannel(InstrumentChannel):
@@ -42,7 +27,7 @@ class YokogawaChannel(InstrumentChannel):
         parent: Instrument,
         name: str,
         channel: str,
-        **kwargs: "Unpack[InstrumentBaseKWArgs]",
+        **kwargs,
     ) -> None:
         """
         Args:
@@ -152,7 +137,7 @@ class YokogawaChannel(InstrumentChannel):
                             set_cmd=f"{channel}:SOUR:CURR:PROT:LEV {{}}",
                             label="Current",
                             unit="A",
-                            vals = vals.Enum(*np.array(200e-9, 2e-6, 20e-6, 200e-6, 2e-3,20e-3,200e-3,1,3)),
+                            vals = vals.Numbers(min_value = 10*1e-9 , max_value=500*1e-3),
                             docstring="Get/Set the current limit for the voltage source operation",
                             )
 
@@ -165,24 +150,23 @@ class YokogawaChannel(InstrumentChannel):
         
         self.wire2or4 = self.add_parameter("wire2or4",
                             get_cmd=f"{channel}:SENS:REM?;*WAI",
-                            get_parser=float,
+                            get_parser=str,
                             set_cmd=f"{channel}:SENS:REM {{}}",
                             vals = vals.Bool(),
                             val_mapping={"on": 1, "off": 0},
-                            docstring = "Get/Set 4wire (true or 1) or 2wire (false or 0)",
+                            docstring = "Use 'on' for 4wire and 'off' for 2 wire",
                             )
 
         self.output = self.add_parameter("output",
-                            get_cmd=f"{channel}:SOUR:OUTP?;*WAI",
-                            get_parser=bool,
-                            set_cmd=f"{channel}.source.output={{:d}}",
-                            val_mapping={"on": 1, "off": 0},
+                            get_cmd=f"{channel}:OUTP?;*WAI",
+                            get_parser=str,
+                            set_cmd=f"{channel}:OUTP {{}}",
+                            val_mapping={"on": 'ON' , "off": 'OFF'},
                             docstring="Get/Set output to  ON (1)/OFF(0)",
                             )
         
-
     def configIV(self, source_voltage_range = 200e-3, 
-                 sense_current_range = 1e-3 ,
+                 sense_current_range = 20e-3 ,
                  current_limit=10e-3):
         '''
         Parameters
@@ -200,14 +184,15 @@ class YokogawaChannel(InstrumentChannel):
         self.source_mode('voltage')
         self.source_volt(0.0)
         self.source_volt_range(source_voltage_range)
+        self.sense_mode('current')
         self.sense_curr_range(sense_current_range)
         self.curr_limit(current_limit)
         pass
     
-    def configVI(self, source_current_range=1e-6, 
+    def configVI(self, source_current_range=2e-6, 
                  sense_voltage_range = 200e-3, 
                  voltage_limit=10e-3,
-                 W4=0):
+                 W4='off'):
         '''
         Parameters
         ----------
@@ -228,6 +213,7 @@ class YokogawaChannel(InstrumentChannel):
         self.source_mode('current')
         self.source_curr(0.0)
         self.source_curr_range(source_current_range)
+        self.sense_mode('voltage')
         self.sense_volt_range(sense_voltage_range)
         self.volt_limit(voltage_limit)
         self.wire2or4(W4)        
@@ -243,38 +229,46 @@ class YokogawaChannel(InstrumentChannel):
         -------
         None.
         '''
-        if self.source_mode.get() == 'current' and self.source_curr_range.get() >= np.abs(value):
+        if self.source_mode.get() == 'current':
             self.source_curr(value)
-        if self.source_mode.get() == 'voltage' and self.source_volt_range.get() >= np.abs(value):
+            return
+        if self.source_mode.get() == 'voltage':
             self.source_volt(value)
+            return
         else:
             raise Exception('Failed! Could not determine the source type.')
 
-    def source_range_auto_toggle(self):
+    def source_range_auto(self, val):
         '''
-        Toggle the source range between Auto and Manual
+        Source range between Auto and Manual
+        Inputs ('OFF', 0, 'ON', 1)
         Returns
         -------
         None.
         '''
         if self.source_mode.get() == 'current':
-            self.write(f'{self.channel}:SOUR:CURR:RANG:AUTO')
+            self.write(f'{self.channel}:SOUR:CURR:RANG:AUTO {val}')
+            return
         if self.source_mode.get() == 'voltage':
-            self.write(f'{self.channel}:SOUR:VOLT:RANG:AUTO')
+            self.write(f'{self.channel}:SOUR:VOLT:RANG:AUTO {val}')
+            return
         else:
             raise Exception('Failed! Could not determine the source type.')
 
-    def sense_range_auto_toggle(self):
+    def sense_range_auto(self, val):
         '''
-        Toggle the sense range between Auto and Manual
+        Sense range between Auto and Manual
+        Inputs ('OFF', 0, 'ON', 1)
         Returns
         -------
         None.
         '''
         if self.sense_mode.get() == 'current':
-            self.write(f'{self.channel}:SENS:CURR:RANG:AUTO')
+            self.write(f'{self.channel}:SENS:CURR:RANG:AUTO {val}')
+            return
         if self.sense_mode.get() == 'voltage':
-            self.write(f'{self.channel}:SENS:VOLT:RANG:AUTO')
+            self.write(f'{self.channel}:SENS:VOLT:RANG:AUTO {val}')
+            return
         else:
             raise Exception('Failed! Could not determine the source type.')
 
@@ -297,13 +291,13 @@ class YokogawaChannel(InstrumentChannel):
         _start_time = perf_counter()
 
         if self.source_mode.get() == 'current':
-            _range = self.souce_curr_range()
+            _range = self.source_curr_range()
             _value = self.source_curr()
             
             sign = np.sign(target_value - _value)
             while np.abs(self.source_curr() - target_value) > step_factor*_range:
                 now = self.source_curr()
-                sleep(0.03)
+                time.sleep(0.03)
                 self.source_curr(now + sign*step_factor*_range)
             if np.abs(self.source_curr() - target_value) <=step_factor*_range:
                 self.source_curr(target_value)
@@ -316,7 +310,7 @@ class YokogawaChannel(InstrumentChannel):
             sign = np.sign(target_value - _value)
             while np.abs(self.source_volt() - target_value) > step_factor*_range:
                 now = self.source_volt()
-                sleep(0.03)
+                time.sleep(0.03)
                 self.source_volt(now + sign*step_factor*_range)
             if np.abs(self.source_volt() - target_value) <= step_factor*_range:
                 self.source_volt(target_value)
@@ -325,9 +319,27 @@ class YokogawaChannel(InstrumentChannel):
                 raise TimeoutError("Failed to reach the target value")
         else:
             raise Exception("Unable to determine the mode")
+
     
-
-
+    def sweep(self, start, stop, pnts, avg=1, both=False, sleep=0.01, W4=False):
+        xvals = np.linspace(start,stop,pnts)
+        if W4:
+            self.wire2or4('on')
+        else:
+            self.wire2or4('off')
+        if both:
+            xvals = np.append(xvals, np.flip(xvals))
+        yvals = []
+       
+        for x in xvals:
+            self.sweepTo(x)
+            y = 0
+            for val in range(avg):
+                time.sleep(sleep)
+                y = y+self.measure()
+            yvals.append(y/avg)
+        return xvals, np.array(yvals)
+    
 class GS820(VisaInstrument):
     """
     This is the qcodes driver for the Yokogawa GS820 Source-Meter series.
@@ -337,7 +349,7 @@ class GS820(VisaInstrument):
     default_terminator = "\n"
     
     def __init__(
-        self, name: str, address: str, **kwargs: "Unpack[VisaInstrumentKWArgs]"
+        self, name: str, address: str, **kwargs
     ) -> None:
         """
         Args:
@@ -366,7 +378,7 @@ class GS820(VisaInstrument):
                 return True
             if perf_counter() - _start_time > 3:
                 raise TimeoutError("Function did not return True within the timeout period.")
-            sleep(0.01)
+            time.sleep(0.01)
 
 
         
