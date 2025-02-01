@@ -138,7 +138,7 @@ class YokogawaChannel(InstrumentChannel):
                             label="Current",
                             unit="A",
                             vals = vals.Numbers(min_value = 10*1e-9 , max_value=500*1e-3),
-                            docstring="Get/Set the current limit for the voltage source operation",
+                            docstring="Get/Set the current limit for the voltage source operation. Validators may have issues.",
                             )
 
                 
@@ -273,7 +273,7 @@ class YokogawaChannel(InstrumentChannel):
             raise Exception('Failed! Could not determine the source type.')
 
 
-    def sweepTo(self, target_value = 0,step_factor=0.01, timeout=5):
+    def sweepTo(self, target_value = 0,step_factor=0.01, timeout=5, sleep=0.03):
         '''
         Parameters
         ----------
@@ -283,6 +283,8 @@ class YokogawaChannel(InstrumentChannel):
             DESCRIPTION. The default is 0.01
         timeout : TYPE, optional
             DESCRIPTION. The default is 5 seconds.
+        sleep : float
+            Sleep time in seconds.
         Returns
         -------
         Sweep the channel output to target_value within 4 seconds.
@@ -297,7 +299,7 @@ class YokogawaChannel(InstrumentChannel):
             sign = np.sign(target_value - _value)
             while np.abs(self.source_curr() - target_value) > step_factor*_range:
                 now = self.source_curr()
-                time.sleep(0.03)
+                time.sleep(sleep)
                 self.source_curr(now + sign*step_factor*_range)
             if np.abs(self.source_curr() - target_value) <=step_factor*_range:
                 self.source_curr(target_value)
@@ -310,7 +312,7 @@ class YokogawaChannel(InstrumentChannel):
             sign = np.sign(target_value - _value)
             while np.abs(self.source_volt() - target_value) > step_factor*_range:
                 now = self.source_volt()
-                time.sleep(0.03)
+                time.sleep(sleep)
                 self.source_volt(now + sign*step_factor*_range)
             if np.abs(self.source_volt() - target_value) <= step_factor*_range:
                 self.source_volt(target_value)
@@ -322,6 +324,28 @@ class YokogawaChannel(InstrumentChannel):
 
     
     def sweep(self, start, stop, pnts, avg=1, both=False, sleep=0.01, W4=False):
+        '''
+        Parameters
+        ----------
+        start : float
+            Start value of the sweep parameter.
+        stop : float
+            Stop value of the sweep parameter.
+        pnts : Int
+            Number of points.
+        avg : Int, optional
+            Number of average. The default is 1.
+        both : Bool, optional
+            Sweep direction. The default is False.
+        sleep : float, optional
+            Delay (in seconds) between set and get. The default is 0.01 ms.
+        W4 : Bool, optional
+            True for 4wire, False for 2Wire. The default is False.
+        Returns
+        -------
+        set_value_array, measured_array
+            DESCRIPTION.
+        '''
         xvals = np.linspace(start,stop,pnts)
         if W4:
             self.wire2or4('on')
@@ -343,7 +367,15 @@ class YokogawaChannel(InstrumentChannel):
 class GS820(VisaInstrument):
     """
     This is the qcodes driver for the Yokogawa GS820 Source-Meter series.
-    Add more verbose later.
+    Create channels as:
+        ch1 = gs.CHAN1
+        ch2 = gs.CHAN2
+        
+    Chennels have channel specific commands
+    Common cmd would remain with the instrument.
+    e.g. 
+    gs.reset()
+    
     """
     
     default_terminator = "\n"
@@ -367,9 +399,9 @@ class GS820(VisaInstrument):
             channel = YokogawaChannel(self, ch_name, ch_name)
             self.add_submodule(ch_name, channel)
         
+        self.connect_message()
         
         self.add_function('reset', call_cmd='*RST;*WAI')
-        self.connect_message()
 
     def iscomplete(self):
         _start_time = perf_counter()
