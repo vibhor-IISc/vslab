@@ -133,7 +133,7 @@ def help(*args):
 
 class Fitter(object):
 	'''
-	Use to define the Model.To see the full list use: help()
+	Use to define the Model. To see the full list use: help()
 	Available methods:
 	.fit()
 	.plot()
@@ -329,7 +329,7 @@ class _Parameter(object):
 # x = np.linspace(-6, 6, 100)
 # plt.plot(x, np.abs(normalizedComplexRootLorentzian(x, 0, 2)))
 # plt.show()
-# d = Data(r'D:\data\2018-08-07_JPA\#008_Power Sweep__16-53-40\ZNB_S21_power_set_S21_frequency_set.dat')
+# d = Data(r'D:\data\datafile.dat')
 # lorentzianFitter = Fitter(invertedLorentzianWithOffset, complex_fit=True)
 
 # mi = lorentzianFitter.fit(d.x, d.data[14])

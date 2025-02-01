@@ -1,115 +1,228 @@
+import os
 import numpy as np
+import xarray as xr
 
-class Data(object):
+class Data2D:
+    def __init__(self, directory):
+        if not os.path.isdir(directory):
+            raise ValueError(f"The provided path '{directory}' is not a valid directory.")
+        
+        self.directory = directory
+        self.data_file = {}
+        self.meta_data = {}
+        self.X = {}
+        self.Y = {}
+        self.numeric_columns = {}
+        self.num_data_columns = {}
+        self._load_metadata_and_columns()
+        self._X()
+        self._Y()
 
-	def __init__(self, fname, dtype=float,
-							 comments='#',
-							 delimiter=None,
-							 converters=None,
-							 skiprows=0,
-							 usecols=None,
-							 unpack=True,
-							 ndmin=0,
-							 encoding=bytes):
 
-		self.data = np.loadtxt(fname, 
-							   dtype=dtype, 
-							   comments=comments, 
-							   delimiter=delimiter, 
-							   converters=converters, 
-							   skiprows=skiprows, 
-							   usecols=usecols, 
-							   unpack=unpack)
+    def _load_metadata_and_columns(self):
+        """
+        Private method to parse metadata files and count numeric columns in .dat files.
 
-		self.read_meta(fname)
+        Raises
+        ------
+        ValueError
+            If there are multiple `.dat` or `.meta.txt` files in the directory.
+        """
+        dat_files = [f for f in os.listdir(self.directory) if f.endswith(".dat")]
+        meta_files = [f for f in os.listdir(self.directory) if f.endswith(".meta.txt")]
 
-		if self.znpts == 1:
-			if self.ynpts == 1:
-				self.dim = 1
-				self.rearrange(1)
-			else:
-				self.dim = 2
-				self.rearrange(2)
-		else:
-			self.dim = 3
-			self.rearrange(3)
+        # Check for multiple files
+        if len(dat_files) > 1:
+            raise ValueError(f"Multiple .dat files found: {dat_files}. Expected only one.")
+        if len(meta_files) > 1:
+            raise ValueError(f"Multiple .meta.txt files found: {meta_files}. Expected only one.")
+        if not dat_files:
+            raise FileNotFoundError("No .dat file found in the directory.")
+        if not meta_files:
+            raise FileNotFoundError("No .meta.txt file found in the directory.")
 
-	def rearrange(self, dim):
-		self.x = np.linspace(self.xstart, self.xstop, self.xnpts)
-		self.y = [1]
-		self.z = [1]
+        # Process single .meta.txt file
+        meta_file = os.path.join(self.directory, meta_files[0])
+        self.meta_data = self._parse_meta_file(meta_file)
 
-		if dim == 1:
-			if self.data.shape[0] == 5:
-				# real, imag, abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				if np.abs(self.data[1][0]+1j*self.data[2][0] - self.data[3][0]*np.exp(1j*self.data[4][0])) > 1e-10:
-					raise Exception('Data is probably not in the format [real, imag, abs, phase]')
-				self.data = self.data[3]*np.exp(1j*self.data[4])
+        # Process single .dat file
+        self.data_file = os.path.join(self.directory, dat_files[0])
+        self.numeric_columns = self._count_numeric_columns(self.data_file)
+        self.num_data_columns = self.numeric_columns - 2
 
-			elif self.data.shape[0] == 3:
-				# abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				self.data = self.data[1]*np.exp(1j*self.data[2])
 
-		if dim == 2:
-			if self.data.shape[0] == 6:
-				# real, imag, abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				if np.abs(self.data[2][0]+1j*self.data[3][0] - self.data[4][0]*np.exp(1j*self.data[5][0])) > 1e-10:
-					raise Exception('Data is probably not in the format [real, imag, abs, phase]')
-				self.data = self.data[4]*np.exp(1j*self.data[5])
+    def _parse_meta_file(self, filepath):
+        with open(filepath, 'r') as file:
+            lines = [line.strip() for line in file if not line.startswith('#') and line.strip()]
+        
+        meta_in = [
+            int(lines[0]), float(lines[1]), float(lines[2]), lines[3]
+        ]
+        if len(lines) > 4:
+            dims = 2
+            meta_out = [
+                int(lines[4]), float(lines[5]), float(lines[6]), lines[7]
+            ]
+        else:
+            dims = 1
+            meta_out = []
+        
+        return meta_in, meta_out, dims
 
-			elif self.data.shape[0] == 4:
-				# abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				self.data = self.data[2]*np.exp(1j*self.data[3])
-				self.y = np.linspace(self.ystart, self.ystop, self.ynpts)
-				self.data = np.array(np.split(self.data, self.ynpts))
+    def _count_numeric_columns(self, filepath):
+        with open(filepath, 'r') as file:
+            for line in file:
+                if not line.startswith('#') and line.strip():
+                    return len(line.split())
+        raise ValueError("No numeric data found in the file.")
 
-			elif self.data.shape[0] == 3:# specially adjusted for Qcodes
-				self.data = self.data[2]
-				self.y = np.linspace(self.ystart, self.ystop, self.ynpts)
-				self.data = np.array(np.split(self.data, self.ynpts))
+    def get_meta_data(self):
+        return self.meta_data
 
-		if dim == 3:
-			if self.data.shape[0] == 7:
-				# real, imag, abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				if np.abs(self.data[3][0]+1j*self.data[4][0] - self.data[5][0]*np.exp(1j*self.data[6][0])) > 1e-10:
-					raise Exception('Data is probably not in the format [real, imag, abs, phase]')
-				self.data = self.data[5]*np.exp(1j*self.data[6])
+    def get_numeric_columns(self):
+        return self.numeric_columns
+    
+    def get_num_data_columns(self):
+        return self.num_data_columns
 
-			elif self.data.shape[0] == 5:
-				# abs, phase (HOPEFULLY THIS WON'T CHANGE)
-				self.data = self.data[3]*np.exp(1j*self.data[4])
-			self.z = np.linspace(self.zstart, self.zstop, self.znpts)
-			self.data = np.array([np.split(d, self.znpts) for d in self.data])
+    def _Y(self):
+        meta_in, _, _ = self.meta_data
+        npts, start, stop = meta_in[:3]
+        self.X = np.linspace(start, stop, npts)
+        
 
-		if dim > 3:
-			Exception('Cannot rearrange more than 3 dimensions')
+    def _X(self):
+        _, meta_out, _ = self.meta_data
+        npts, start, stop = meta_out[:3]
+        self.Y = np.linspace(start, stop, npts)
+    
+    def read_column(self, column_index, **kwargs):
+        """
+        Reads a specific column from the .dat file and rearranges 
+        it to the size (len(inner_loop), len(outer_loop)).
+    
+        Parameters
+        ----------
+        column_index : int
+            The index of the column to read (0-based).
+        **kwargs : dict
+            Additional keyword arguments to pass to np.loadtxt, such as `delimiter`, `unpack`, etc.
+    
+        Returns
+        -------
+        numpy.ndarray
+            The rearranged array of size (len(inner_loop), len(outer_loop)).
+        """
+        
+        if not (0 <= column_index <  self.numeric_columns):
+            raise ValueError(f"Invalid column index {column_index}. Must be between 0 and {self.num_data_columns - 1}.")
 
-	def read_meta(self, fname):
-		meta = open(fname[:-3]+'meta.txt', 'r')
-		lines = meta.readlines()
-		line = 0
-		def next_line(line):
-			while lines[line][0] == '#':
-				line+=1
-			return line
-		line = next_line(line)
-		self.xnpts = int(lines[line])
-		line = next_line(line+1)
-		self.xstart = float(lines[line])
-		line = next_line(line+1)
-		self.xstop = float(lines[line])
-		line = next_line(line+1)
-		line = next_line(line+1)
-		self.ynpts = int(lines[line])
-		line = next_line(line+1)
-		self.ystart = float(lines[line])
-		line = next_line(line+1)
-		self.ystop = float(lines[line])
-		line = next_line(line+1)
-		line = next_line(line+1)
-		self.znpts = int(lines[line])
-		line = next_line(line+1)
-		self.zstart = float(lines[line])
-		line = next_line(line+1)
-		self.zstop = float(lines[line])
-		meta.close()
+
+    
+        # Extract inner and outer dimensions from metadata
+        meta_in, meta_out, dims = self.meta_data
+        inner_npts = len(self.X)
+        outer_npts = len(self.Y)
+    
+
+        data = np.loadtxt(self.data_file, usecols=[column_index], **kwargs)
+    
+        # Ensure data size matches the expected size
+        if len(data) != inner_npts * outer_npts:
+            raise ValueError(f"Data size {len(data)} does not match the expected size {inner_npts * outer_npts}.")
+    
+        # Rearrange data to (len(inner_loop), len(outer_loop))
+        return data.reshape((outer_npts, inner_npts))
+    
+    def Z(self, column_index, **kwargs):
+        return self.read_column(column_index, **kwargs)
+    
+    
+    
+    
+def SaveNpy(dir_path):
+    '''
+    Parameters
+    ----------
+    dir_path : directoty where .dat and .meta.txt file lives.
+
+    Returns
+    -------
+    Save X, Y, all Z columns in numpy arrays in the same directory
+    
+    In future we should update a new function, which saves
+    everthing in more managable binary container like xarray
+    Numpy arrays have fixed size issue, and any other approach
+    in my opinion will never be as fast. 
+
+    '''
+    
+    d = Data2D(dir_path)
+    
+    # Saving X array
+    filename_x = d.data_file[:-4]+'_X1'+'.npy'
+    np.save(filename_x, d.X)
+    
+    # Saving Y array
+    filename_y = d.data_file[:-4]+'_Y2'+'.npy'
+    np.save(filename_y, d.Y)
+    
+    # Saving Z arrays
+    for i in np.arange(d.num_data_columns):
+        filename = d.data_file[:-4]+f'_Z{i+2}'+'.npy'
+        np.save(filename, d.Z(2+i))
+    
+    print('All .npy files written to disk.')
+    pass
+
+    
+
+
+def SaveHD5(dir_path):
+    '''
+
+    Parameters
+    ----------
+    dir_path : directoty where .dat and .meta.txt file lives.
+
+    Returns
+    -------
+    Reoranize the .dat file into a .h5 file with all Z columns, and Coordinates
+    
+    Use the following to retrieve from the .h5 file
+    
+    import xarray as xr
+    ds_loaded = xr.open_dataset(file_name, engine="h5netcdf")
+    X_values = ds_loaded["X"].values
+    Y_values = ds_loaded["Y"].values
+    Z2_array = ds_loaded["Z2"].values
+    '''
+    d = Data2D(dir_path)
+    
+    # Combining different Z columns
+    data_vars = {}
+    for i in np.arange(d.num_data_columns):
+        data_vars[f"Z{2+i}"] = (["Y", "X"], d.Z(2+i))
+        
+    # Creating a Xarray dataset with coordinates
+    ds = xr.Dataset(data_vars, coords = {"Y": d.Y, "X": d.X})
+    
+    # Writing the Dataset to disk using h5 format
+    file_name = d.data_file[:-4]+'.h5'
+    ds.to_netcdf(file_name, engine="h5netcdf")
+    print('.h5 written to disk.')
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
