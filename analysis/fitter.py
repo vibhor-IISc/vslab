@@ -310,8 +310,8 @@ class Fitter:
     
     
     # Get best fit parameters and their stderr
-    best_params = fitter.best_fit_params()
-    print("\nBest fit parameters and their stderr:")
-    for param_name, param_info in best_params.items():
-        print(f"{param_name}: value = {param_info['value']}, stderr = {param_info['stderr']}")
+    # best_params = fitter.best_fit_params()
+    # print("\nBest fit parameters and their stderr:")
+    # for param_name, param_info in best_params.items():
+    #     print(f"{param_name}: value = {param_info['value']}, stderr = {param_info['stderr']}")
 
