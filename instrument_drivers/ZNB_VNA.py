@@ -273,7 +273,6 @@ class ZNB_VNA(VisaInstrument):
         '''  Perform single sweep IMM with *OPC?, 
         '''
         self.write('INIT:CONT OFF')
-        # sleep(8)
         self.write('INIT1:IMM')
         self.ask('*OPC?') 
         pass
