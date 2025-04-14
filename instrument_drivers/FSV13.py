@@ -45,7 +45,7 @@ class psd(ParameterWithSetpoints):
         
         if self.root_instrument.is_complete():
             _tr = self.root_instrument.ask('TRAC? TRACE1;*WAI')
-        return np.array(_tr.split(',')).astype(np.float)
+        return np.array(_tr.split(',')).astype(np.float128)
 
 
 class psd_fast(ParameterWithSetpoints):
@@ -60,7 +60,7 @@ class psd_fast(ParameterWithSetpoints):
         '''
         self.root_instrument.sweep_single()
         _tr = self.root_instrument.ask('TRAC? TRACE1;*WAI')
-        return np.array(_tr.split(',')).astype(np.float)
+        return np.array(_tr.split(',')).astype(np.float128)
 
 
 class GenerateMarkerArray(Parameter):
