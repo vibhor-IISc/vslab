@@ -7,7 +7,6 @@ from qcodes.instrument import (
     Instrument,
     InstrumentChannel,
     VisaInstrument,
-    VisaInstrumentKWArgs,
 )
 from qcodes.parameters import (
     ArrayParameter,
@@ -28,7 +27,7 @@ class YokogawaChannel(InstrumentChannel):
         name: str,
         channel: str,
         **kwargs,
-    ) -> None:
+    ):
         """
         Args:
             parent: The Instrument instance to which the channel is
@@ -47,7 +46,7 @@ class YokogawaChannel(InstrumentChannel):
 
         self.channel = channel
 
-        self.source_mode = self.add_parameter("source_mode",
+        self.add_parameter("source_mode",
                           get_cmd=f"{channel}:SOUR:FUNC?;*WAI",
                           get_parser=str.strip,
                           set_cmd=f"{channel}:SOUR:FUNC {{}}",
@@ -55,7 +54,7 @@ class YokogawaChannel(InstrumentChannel):
                           docstring="Selects the type of SOURCE e.g. 'voltage' or 'current'.",
                           )
         
-        self.sense_mode = self.add_parameter("sense_mode",
+        self.add_parameter("sense_mode",
                           get_cmd=f"{channel}:SENS:FUNC?;*WAI",
                           get_parser=str.strip,
                           set_cmd=f"{channel}:SENS:FUNC {{}}",
@@ -63,7 +62,7 @@ class YokogawaChannel(InstrumentChannel):
                           docstring="Selects the type of SENSE e.g. 'voltage' or 'current'.",
                           )
 
-        self.source_volt = self.add_parameter("source_volt",
+        self.add_parameter("source_volt",
                            get_cmd=f"{channel}:SOUR:VOLT:LEV?;*WAI",
                            get_parser=float,
                            set_cmd=f"{channel}:SOUR:VOLT:LEV {{:.6f}}",
@@ -72,7 +71,7 @@ class YokogawaChannel(InstrumentChannel):
                            docstring="Get/Set the source voltage",
                            )
 
-        self.source_curr = self.add_parameter("source_curr",
+        self.add_parameter("source_curr",
                     get_cmd=f"{channel}:SOUR:CURR:LEV?;*WAI",
                     get_parser=float,
                     set_cmd=f"{channel}:SOUR:CURR:LEV {{:.6f}}",
@@ -81,7 +80,7 @@ class YokogawaChannel(InstrumentChannel):
                     docstring="Get/Set the source current.",
                     )
         
-        self.source_volt_range = self.add_parameter("source_volt_range",
+        self.add_parameter("source_volt_range",
                         get_cmd=f"{channel}:SOUR:VOLT:RANG?;*WAI",
                         get_parser=float,
                         set_cmd=f"{channel}:SOUR:VOLT:RANG {{}}",
@@ -91,7 +90,7 @@ class YokogawaChannel(InstrumentChannel):
                         docstring="Get/Set the source voltage range",
                         )
         
-        self.source_curr_range = self.add_parameter("source_curr_range",
+        self.add_parameter("source_curr_range",
                         get_cmd=f"{channel}:SOUR:CURR:RANG?;*WAI",
                         get_parser=float,
                         set_cmd=f"{channel}:SOUR:CURR:RANG {{}}",
@@ -101,7 +100,7 @@ class YokogawaChannel(InstrumentChannel):
                         docstring="Get/Set the source current range",
                         )
         
-        self.sense_volt_range = self.add_parameter("sense_volt_range",
+        self.add_parameter("sense_volt_range",
                                 get_cmd=f"{channel}:SENS:VOLT:RANG?;*WAI",
                                 get_parser=float,
                                 set_cmd=f"{channel}:SENS:VOLT:RANG {{}}",
@@ -111,7 +110,7 @@ class YokogawaChannel(InstrumentChannel):
                                 docstring="Get/Set the sense voltage range",
                                 )
         
-        self.sense_curr_range = self.add_parameter("sense_curr_range",
+        self.add_parameter("sense_curr_range",
                                 get_cmd=f"{channel}:SENS:CURR:RANG?;*WAI",
                                 get_parser=float,
                                 set_cmd=f"{channel}:SENS:CURR:RANG {{}}",
@@ -121,7 +120,7 @@ class YokogawaChannel(InstrumentChannel):
                                 docstring="Get/Set the sense current range",
                                 )
 
-        self.volt_limit = self.add_parameter("volt_limit",
+        self.add_parameter("volt_limit",
                             get_cmd=f"{channel}:SOUR:VOLT:PROT:LEV?;*WAI",
                             get_parser=float,
                             set_cmd=f"{channel}:SOUR:VOLT:PROT:LEV {{}}",
@@ -131,7 +130,7 @@ class YokogawaChannel(InstrumentChannel):
                             docstring="Get/Set the voltage limit for the current source operation",
                             )
         
-        self.curr_limit = self.add_parameter("curr_limit",
+        self.add_parameter("curr_limit",
                             get_cmd=f"{channel}:SOUR:CURR:PROT:LEV?;*WAI",
                             get_parser=float,
                             set_cmd=f"{channel}:SOUR:CURR:PROT:LEV {{}}",
@@ -142,13 +141,13 @@ class YokogawaChannel(InstrumentChannel):
                             )
 
                 
-        self.measure = self.add_parameter("measure",
+        self.add_parameter("measure",
                             get_cmd=f"{channel}:MEAS?;*WAI",
                             get_parser=float,
                             docstring="Get the measured result",
                             )
         
-        self.wire2or4 = self.add_parameter("wire2or4",
+        self.add_parameter("wire2or4",
                             get_cmd=f"{channel}:SENS:REM?;*WAI",
                             get_parser=str,
                             set_cmd=f"{channel}:SENS:REM {{}}",
@@ -157,11 +156,11 @@ class YokogawaChannel(InstrumentChannel):
                             docstring = "Use 'on' for 4wire and 'off' for 2 wire",
                             )
 
-        self.output = self.add_parameter("output",
+        self.add_parameter("output",
                             get_cmd=f"{channel}:OUTP?;*WAI",
                             get_parser=str,
                             set_cmd=f"{channel}:OUTP {{}}",
-                            val_mapping={"on": 'ON' , "off": 'OFF'},
+                            val_mapping={"on": '1' , "off": '1'},
                             docstring="Get/Set output to  ON (1)/OFF(0)",
                             )
         
@@ -381,7 +380,7 @@ class GS820(VisaInstrument):
     default_terminator = "\n"
     
     def __init__(
-        self, name: str, address: str, terminator=default_terminator, **kwargs
+        self, name: str, address: str,  terminator="\n", **kwargs
     ) -> None:
         """
         Args:
@@ -390,19 +389,17 @@ class GS820(VisaInstrument):
             **kwargs: kwargs are forwarded to the base class.
 
         """
-        super().__init__(name, address, terminator=default_terminator, **kwargs)
+        super().__init__(name, address,  terminator="\n", **kwargs)
 
 
         # Add the channel to the instrument
         for ch in ["CHAN1", "CHAN2"]:
-            ch_name = f"{ch}"
-            channel = YokogawaChannel(self, ch_name, ch_name)
-            self.add_submodule(ch_name, channel)
+            channel = YokogawaChannel(self, ch, ch)
+            self.add_submodule(ch, channel)
         
         self.connect_message()
         
         self.add_function('reset', call_cmd='*RST;*WAI')
-
 
     def iscomplete(self):
         _start_time = perf_counter()
@@ -414,8 +411,55 @@ class GS820(VisaInstrument):
             time.sleep(0.01)
 
 
-        
-        
+################################################################
+
+# EXAMPLE
+######        
+# # -*- coding: utf-8 -*-
+# """
+# Created on Mon Jan 27 10:42:32 2025
+
+# @author: user
+# """
+
+# from vslab._future_.YokogawaGS820 import GS820
+
+# gs = GS820('gs', address='TCPIP0::192.168.1.18::INSTR')
+
+# ch1 = gs.CHAN1
+# ch2 = gs.CHAN2
+
+# print(ch1.source_mode())
+# ch1.source_mode('current')
+# print(ch1.sense_mode())
+# print(ch1.source_volt())
+# print(ch1.source_curr())
+
+
+# print(ch1.source_curr_range())
+# print(ch1.sense_volt_range())
+
+# ch1.sense_volt_range(2)
+
+# print(ch1.volt_limit())
+
+# ch1.output('on')
+# # Tested with loop. Found no time out issue. 
+# print(ch1.measure())
+
+# # check the multi set commands in loop to see if deadlock occurs
+# # AT some time
+
+# # Possibly, it is working. The server does not show the red light indicator
+# ch1.output('on')
+
+# ch1.setTo(15e-3)
+
+# ch1.source_range_auto('OFF')
+# ch1.sweepTo(0)
+
+# ch1.configVI()
+
     
 
 
