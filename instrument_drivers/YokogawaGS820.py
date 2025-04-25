@@ -381,7 +381,7 @@ class GS820(VisaInstrument):
     default_terminator = "\n"
     
     def __init__(
-        self, name: str, address: str, **kwargs
+        self, name: str, address: str, terminator=default_terminator, **kwargs
     ) -> None:
         """
         Args:
@@ -390,7 +390,7 @@ class GS820(VisaInstrument):
             **kwargs: kwargs are forwarded to the base class.
 
         """
-        super().__init__(name, address, **kwargs)
+        super().__init__(name, address, terminator=default_terminator, **kwargs)
 
 
         # Add the channel to the instrument
@@ -402,6 +402,7 @@ class GS820(VisaInstrument):
         self.connect_message()
         
         self.add_function('reset', call_cmd='*RST;*WAI')
+
 
     def iscomplete(self):
         _start_time = perf_counter()
