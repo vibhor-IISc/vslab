@@ -76,6 +76,24 @@ class Fitter:
         return np.abs(amp*(1 - (2*ke/k) * (1 + 1j*2*(x-x0)/k)**-1))
     
     @staticmethod
+    def S11complex(x, x0, ke, k, amp, phi):
+        '''
+        Parameters
+        ----------
+        x : frequency
+        x0 : resonant frequency
+        ke : external/internal coupling
+        k : linewidth
+        amp : amplitude (baseline)
+        phi : phase factor
+        
+        Returns
+        -------
+        np.abs(amp*(1 - (2*ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
+        '''
+        return np.abs(amp*(1 - (2*ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
+    
+    @staticmethod
     def S21side(x, x0, ke, k, amp):
         '''
         Parameters
@@ -135,6 +153,7 @@ class Fitter:
         self.models = {
             "S21": self.S21,
             "S11": self.S11,
+            "S11complex": self.S11complex,
             "S21side": self.S21side,
             "linear": self.linear,
             "quadratic": self.quadratic,
@@ -168,6 +187,14 @@ class Fitter:
             k = self._guess_fwhm2(x, -y)
             ke = (k/2)*np.abs(1-np.min(y)/amp)            
             return {"x0":x0, "ke":ke, "k":k, "amp":amp}
+        
+        elif self.model_type == 'S11complex':
+            amp = np.max(y)
+            x0 = x[np.argmin(y)]
+            k = self._guess_fwhm2(x, -y)
+            ke = (k/2)*np.abs(1-np.min(y)/amp)
+            phi = np.pi*0.3            
+            return {"x0":x0, "ke":ke, "k":k, "amp":amp, "phi":phi}
         
         elif self.model_type == 'S21side':
             amp = np.max(y)
