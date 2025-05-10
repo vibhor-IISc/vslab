@@ -32,7 +32,7 @@ meta_quick()
 '''
 ###################################
 
-def begin_save(filename='exp_name'):
+def begin_save(filename='exp_name', device_id = 'sample'):
     '''
     Parameters
     ----------
@@ -41,6 +41,10 @@ def begin_save(filename='exp_name'):
         The default is 'exp'. Give exp_name like
         rabi, power_rabi, omit, power_sweep, etc.
 
+    device_id : String
+        DESCRIPTIONS - A name of the sample. 
+        The default is 'sample'
+
     Returns --> None
     Actions:
     create a date-time directory, and ppath.log to 
@@ -48,7 +52,7 @@ def begin_save(filename='exp_name'):
 
     '''
     filestr =datetime.now().strftime('%Y%m%d_%H%M%S').split('_')
-    mydir = os.path.join('D:\\Data', filestr[0], filestr[1]+'_'+filename)
+    mydir = os.path.join('D:\\Data', filestr[0]+'_'+device_id, filestr[1]+'_'+filename)
     file2disk = filestr[1]+filename
     try:
         os.makedirs(mydir)
