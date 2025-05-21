@@ -94,6 +94,31 @@ def loop_write(data, filename):
     fl.close()
 
 
+
+def loop_write2(data, filepath):
+    '''
+    Parameters
+    ----------
+    data : Numpy data block
+    filepath: Full path of the file
+
+    Returns --> None
+    Actions:
+    writes the data to disk in .dat format using the path 
+    specified by ppath and filename.
+
+
+    '''
+    fl = open(filepath,'a+')
+    rows = data.shape[0]
+    cols = data.shape[1]
+    for row in np.arange(rows):
+        for col in np.arange(cols):
+            fl.write(str(data[row][col])+'\t')
+        fl.write('\n')
+    fl.close()
+
+
 def meta_quick(meta_in, meta_out, dims):
     '''
     Parameters

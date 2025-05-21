@@ -7,9 +7,11 @@ Created on Sat Feb  1 22:15:06 2025
 """
 
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from lmfit import Model
 from scipy.signal import find_peaks
+
 
 class Fitter:
     """A general fitting class using lmfit 
@@ -111,6 +113,26 @@ class Fitter:
         k = ke + ki
         return np.abs(amp*(1 - (ke/k) * (1 + 1j*2*(x-x0)/k)**-1))
 
+
+    @staticmethod
+    def S21sideComplex(x, x0, ke, ki, amp, phi):
+        '''
+        Parameters
+        ----------
+        x : frequency
+        x0 : resonant frequency
+        ke : external coupling
+        ki : internal linewidth
+        amp : amplitude (baseline)
+        phi : A complex phase shift
+        
+        Returns
+        -------
+        np.abs(amp*(1 - (ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
+        '''
+        k = ke*np.cos(phi) + ki
+        return np.abs(amp*(1 - (ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
+
     @staticmethod
     def lorentzian(x, A, x0, w):
         """Lorentzian function."""
@@ -147,7 +169,7 @@ class Fitter:
     def __init__(self, model_type="lorentzian"):
         """Initialize the Fitter with a specified model type.
         Available models are:
-            S21, S11, S21side
+            S21, S11, S21side, S21sideComplex
             linear, quadratic,
             exponential, lorentzian
         """
@@ -156,6 +178,7 @@ class Fitter:
             "S11": self.S11,
             "S11complex": self.S11complex,
             "S21side": self.S21side,
+            "S21sideComplex": self.S21sideComplex,
             "linear": self.linear,
             "quadratic": self.quadratic,
             "lorentzian": self.lorentzian,
@@ -204,6 +227,15 @@ class Fitter:
             ke = k*np.abs(1-np.min(y)/amp)
             ki = np.abs(k-ke)            
             return {"x0":x0, "ke":ke, "ki":ki, "amp":amp}
+
+        elif self.model_type == 'S21sideComplex':
+            amp = np.max(y)
+            x0 = x[np.argmin(y)]
+            k = self._guess_fwhm2(x, -y)
+            ke = k*np.abs(1-np.min(y)/amp)
+            ki = np.abs(k-ke)
+            phi = 0.19            
+            return {"x0":x0, "ke":ke, "ki":ki, "amp":amp, "phi":phi}
 
         elif self.model_type == "linear":
             coeffs = np.polyfit(x, y, 1)
