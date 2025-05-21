@@ -244,6 +244,10 @@ class Fitter:
         if self.result is None:
             raise RuntimeError("No fit result available. Run .fit() first.")
         
+        # Create the directory if it doesn't exist
+        directory = os.path.dirname(filename)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
         ax = self.result.plot_fit()  # Generate the fit plot
         fig = ax.figure  # Get the figure from Axes
         fig.savefig(filename, dpi=300, bbox_inches="tight")
