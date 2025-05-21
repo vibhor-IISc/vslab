@@ -94,20 +94,21 @@ class Fitter:
         return np.abs(amp*(1 - (2*ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
     
     @staticmethod
-    def S21side(x, x0, ke, k, amp):
+    def S21side(x, x0, ke, ki, amp):
         '''
         Parameters
         ----------
         x : frequency
         x0 : resonant frequency
-        ke : external/internal coupling
-        k : linewidth
+        ke : external coupling
+        ki : internal linewidth
         amp : amplitude (baseline)
         
         Returns
         -------
         np.abs(amp*(1 - (ke/k) * (1 + 1j*2*(x-x0)/k)**-1))
         '''
+        k = ke + ki
         return np.abs(amp*(1 - (ke/k) * (1 + 1j*2*(x-x0)/k)**-1))
 
     @staticmethod
@@ -200,8 +201,9 @@ class Fitter:
             amp = np.max(y)
             x0 = x[np.argmin(y)]
             k = self._guess_fwhm2(x, -y)
-            ke = k*np.abs(1-np.min(y)/amp)            
-            return {"x0":x0, "ke":ke, "k":k, "amp":amp}
+            ke = k*np.abs(1-np.min(y)/amp)
+            ki = np.abs(k-ke)            
+            return {"x0":x0, "ke":ke, "ki":ki, "amp":amp}
 
         elif self.model_type == "linear":
             coeffs = np.polyfit(x, y, 1)
