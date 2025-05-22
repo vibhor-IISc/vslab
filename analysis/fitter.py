@@ -134,6 +134,24 @@ class Fitter:
         return np.abs(amp*(1 - (ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
 
     @staticmethod
+    def S21sideDCM(x, x0, Qe, Q, amp, phi):
+        '''
+        Parameters
+        ----------
+        x : frequency
+        x0 : resonant frequency
+        Qe : external coupling
+        Q : total linewidth
+        amp : amplitude (baseline)
+        phi : A complex phase shift
+        
+        Returns
+        -------
+        return np.abs(amp*(1 - (Q/Qe*np.exp(-1j*phi)) / (1 + 1j*2*Q*(x-x0)/x0)))
+        '''
+        return np.abs(amp*(1 - (Q/Qe*np.exp(-1j*phi)) / (1 + 1j*2*Q*(x-x0)/x0)))
+
+    @staticmethod
     def lorentzian(x, A, x0, w):
         """Lorentzian function."""
         return (A / np.pi) * (w / 2) / ((x - x0) ** 2 + (w / 2) ** 2)
@@ -179,6 +197,7 @@ class Fitter:
             "S11complex": self.S11complex,
             "S21side": self.S21side,
             "S21sideComplex": self.S21sideComplex,
+            "S21sideDCM": self.S21sideDCM,
             "linear": self.linear,
             "quadratic": self.quadratic,
             "lorentzian": self.lorentzian,
@@ -236,6 +255,16 @@ class Fitter:
             ki = np.abs(k-ke)
             phi = 0.19            
             return {"x0":x0, "ke":ke, "ki":ki, "amp":amp, "phi":phi}
+
+        elif self.model_type == 'S21sideDCM':
+            amp = np.max(y)
+            x0 = x[np.argmin(y)]
+            k = self._guess_fwhm2(x, -y)
+            ke = k*np.abs(1-np.min(y)/amp)
+            Q = x0/k
+            Qe = x0/ke
+            phi = 0.19            
+            return {"x0":x0, "Qe":Qe, "Q":Q, "amp":amp, "phi":phi}
 
         elif self.model_type == "linear":
             coeffs = np.polyfit(x, y, 1)
