@@ -20,44 +20,61 @@ import numpy as np
 from glob import glob
 
 key = 7
-paths = glob(rf'E:\Downloads\20250523\*.{key}*')
-
-ix = 5
-
-path = paths[ix]
-print(path)
-
-d = Data2D(path)
+paths = glob(rf'E:\Downloads\20250523\*{key}*')
 
 
-xdata = d.X
-pw = d.Y
-da = d.Z(2)
 
-ki= []
+for ix in np.arange(6):
 
-for idx, val in enumerate(pw):
-    ydata = da[idx]
-    fitter = Fitter("S21sideComplex")
-    result = fitter.fit(xdata, ydata)
-    fitter.saveplot(path+'\\fit_figs'+'\\S21side_'+str(idx).zfill(2)+'.png')
+    path = paths[ix]
+    print(path)
+    d = Data2D(path)
+    
+    xdata = d.X
+    pw = d.Y
+    da = d.Z(2)
+    
+    ki= []
+    kierr = []
+    
+    for idx, val in enumerate(pw):
+        ydata = da[idx]
+        fitter = Fitter("S21sideComplex")
+        result = fitter.fit(xdata, ydata)
+        fitter.saveplot(path+'\\fit_figs'+'\\S21side_'+str(idx).zfill(2)+'.png')
+        plt.clf()
+        k = result.params['k'].value
+        k_err = result.params['k'].stderr
+        ke = result.params['ke'].value
+        ke_err = result.params['ke'].stderr
+        phi = result.params['phi'].value
+        phi_err = result.params['phi'].stderr
+        
+        # Computing ki
+        ki.append(np.abs(np.abs(k) - np.abs(ke)*np.abs(np.cos(phi))))
+        # Computing ki error
+        ki_err = k_err+ke_err*np.cos(phi) + np.abs(ke)*np.sin(phi_err)
+        print(ki_err)
+        kierr.append(ki_err)
+    
+    data = np.array(list(zip(pw, ki, kierr)))
+    loop_write2(data, path+'\\fit_figs'+f'\\result_{key}_'+str(ix)+'.dat')
+    
     plt.clf()
-    k = result.params['k'].value
-    ke = result.params['ke'].value
-    phi = result.params['phi'].value
-    ki.append(np.abs(k) - np.abs(ke)*np.abs(np.cos(phi)))
-
-
-data = np.array(list(zip(pw, ki)))
-loop_write2(data, path+'\\fit_figs'+f'\\result_{key}_'+str(ix)+'.dat')
-
-plt.clf()
-plt.plot(np.flip(pw), ki, '--go')
-
-plt.xlabel('power [dBm]')
-plt.ylabel('ki [Hz]')
-plt.tight_layout()
-plt.title(path.split('\\')[-1])
-plt.savefig(path+'\\fit_figs'+'\\S21side_Power.png')    
+    
+    plt.errorbar(np.flip(pw), ki, kierr, 
+                 marker = 's',
+                 markersize=5,
+                 markerfacecolor='black',
+                 ecolor='grey',
+                 capsize=3,
+                 elinewidth=1)
+    
+    plt.xlabel('power [dBm]')
+    plt.ylabel('ki [Hz]')
+    plt.tight_layout()
+    plt.title(path.split('\\')[-1])
+    plt.savefig(path+'\\fit_figs'+f'\\S21side_Power{ix}.png')
+plt.clf()    
     
 
