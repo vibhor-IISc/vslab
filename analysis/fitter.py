@@ -115,23 +115,22 @@ class Fitter:
 
 
     @staticmethod
-    def S21sideComplex(x, x0, ke, ki, amp, phi):
+    def S21sideComplex(x, x0, ke, k, amp, phi):
         '''
         Parameters
         ----------
         x : frequency
         x0 : resonant frequency
         ke : external coupling
-        ki : internal linewidth
+        k : total linewidth
         amp : amplitude (baseline)
         phi : A complex phase shift
         
         Returns
         -------
-        np.abs(amp*(1 - (ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
+        np.abs(amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 - 1j*(x-x0))))
         '''
-        k = ke*np.cos(phi) + ki
-        return np.abs(amp*(1 - (ke*np.exp(1j*phi)/k) * (1 + 1j*2*(x-x0)/k)**-1))
+        return np.abs(amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 - 1j*(x-x0))))
 
     @staticmethod
     def S21sideDCM(x, x0, Qe, Q, amp, phi):
@@ -252,9 +251,9 @@ class Fitter:
             x0 = x[np.argmin(y)]
             k = self._guess_fwhm2(x, -y)
             ke = k*np.abs(1-np.min(y)/amp)
-            ki = np.abs(k-ke)
+            k = np.abs(k)
             phi = 0.19            
-            return {"x0":x0, "ke":ke, "ki":ki, "amp":amp, "phi":phi}
+            return {"x0":x0, "ke":ke, "k":k, "amp":amp, "phi":phi}
 
         elif self.model_type == 'S21sideDCM':
             amp = np.max(y)
