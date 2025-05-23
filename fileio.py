@@ -94,7 +94,6 @@ def loop_write(data, filename):
     fl.close()
 
 
-
 def loop_write2(data, filepath):
     '''
     Parameters
@@ -106,17 +105,25 @@ def loop_write2(data, filepath):
     Actions:
     writes the data to disk in .dat format using the path 
     specified by ppath and filename.
-
-
+    GIVES a warning if file already exists and append the data. 
+    It will NEVER over-write existing file. 
     '''
-    fl = open(filepath,'a+')
-    rows = data.shape[0]
-    cols = data.shape[1]
-    for row in np.arange(rows):
-        for col in np.arange(cols):
-            fl.write(str(data[row][col])+'\t')
-        fl.write('\n')
-    fl.close()
+    if os.path.exists(filepath):  # Check if file already exists
+        print(f"SERIOUS Warning: '{filepath}' already exists!")
+    
+    with open(filepath, 'a+') as fl:  # Use 'a+' mode to append data
+        rows, cols = data.shape
+        
+        for row in range(rows):
+            for col in range(cols):
+                fl.write(str(data[row][col]) + '\t')
+            fl.write('\n')
+
+# Example Usage
+data = np.array([[1, 2, 3], [4, 5, 6]])
+loop_write2(data, "output.txt")
+
+
 
 
 def meta_quick(meta_in, meta_out, dims):
