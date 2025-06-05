@@ -85,26 +85,26 @@ class QUCSDataset:
 #  -------------------------
 
 # Example usage:
-filename = r"C:\Users\user\.qucs\coupled_filter_prj\coupled_filter_sweep.dat"
-parser = QucsDatasetParser(filename)
-parser.parse()
+# filename = r"C:\Users\user\.qucs\coupled_filter_prj\coupled_filter_sweep.dat"
+# parser = QUCSDataset(filename)
+# parser.parse()
 
-# # Print results
-# print("Independent Variables:", parser.get_independent_vars())
-# print("\nDependent Variables:", parser.get_data())
+# # # Print results
+# # print("Independent Variables:", parser.get_independent_vars())
+# # print("\nDependent Variables:", parser.get_data())
 
-GHz = 1e9
-nH = 1e-9
+# GHz = 1e9
+# nH = 1e-9
 
-freq = np.array(parser.get_independent_vars()['frequency'])/GHz
-Lq = np.array(parser.get_independent_vars()['Lq'])/nH
-s21 = np.array(parser.get_data()['S[2,1]']['values']).reshape(len(Lq),len(freq))
+# freq = np.array(parser.get_independent_vars()['frequency'])/GHz
+# Lq = np.array(parser.get_independent_vars()['Lq'])/nH
+# s21 = np.array(parser.get_data()['S[2,1]']['values']).reshape(len(Lq),len(freq))
 
-import matplotlib.pyplot as plt
-plt.imshow(np.abs(s21), 
-           extent=(freq[0],freq[-1], Lq[-1],Lq[0]), 
-           aspect='auto')
+# import matplotlib.pyplot as plt
+# plt.imshow(np.abs(s21), 
+#            extent=(freq[0],freq[-1], Lq[-1],Lq[0]), 
+#            aspect='auto')
 
-plt.xlabel('Freq (GHz)')
-plt.ylabel('LJ (nH)')
-plt.show()
+# plt.xlabel('Freq (GHz)')
+# plt.ylabel('LJ (nH)')
+# plt.show()
