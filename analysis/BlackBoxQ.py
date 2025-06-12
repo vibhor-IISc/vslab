@@ -46,8 +46,8 @@ class Mode:
         print('Detected zero-crossings with +ve slope: ', self.mode_count)
         
         for mode_index in zero_indices:
-            fm, Cm, Lm = self.zero_slope(self.freq[mode_index-5:mode_index+5],
-                                        self.y11[mode_index-5:mode_index+5],
+            fm, Cm, Lm = self.zero_slope(self.freq[mode_index-3:mode_index+3],
+                                        self.y11[mode_index-3:mode_index+3],
                                         plot)
             
             f0list = np.append(f0list, fm)
@@ -103,11 +103,13 @@ class Mode:
         self.C = Cp
         
         if plot:
+            plt.figure()
             plt.plot(x,y,'o', label = f'Cp = {Cp:.2e}')
             plt.plot(x, y11_smooth(x), '--', label = f'Lp = {Lp:.2e}')
             plt.plot(y11_smooth.roots(),[0.0],'*', markersize = 15, label=f'fp = {fp:.3e}')
             plt.legend()
             plt.show()
+            plt.clf()
         return [fp, Cp, Lp]
     
     def Kerr_self(self, mode_index):
@@ -140,24 +142,24 @@ class Mode:
     
 ############  Example
 
-import numpy as np
-import matplotlib.pyplot as plt
-from vslab.analysis.QUCSDataset import QUCSDataset
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from vslab.analysis.QUCSDataset import QUCSDataset
 
 
-from vslab.analysis.BlackBoxQ import Mode
+# from vslab.analysis.BlackBoxQ import Mode
 
-files = list(Path.cwd().glob('*dispersive*.dat'))
-parser = QUCSDataset(files[0])
-parser.parse()
+# files = list(Path.cwd().glob('*dispersive*.dat'))
+# parser = QUCSDataset(files[0])
+# parser.parse()
 
 
-freq = np.array(parser.get_independent_vars()['frequency'])/GHz
-y3 = np.array(parser.get_data()['imag_Y33']['values'])
+# freq = np.array(parser.get_independent_vars()['frequency'])/GHz
+# y3 = np.array(parser.get_data()['imag_Y33']['values'])
 
-LJ=8*1e-9
+# LJ=8*1e-9
 
-m0 = Mode(freq*GHz, y3, LJ, True)
+# m0 = Mode(freq*GHz, y3, LJ, True)
         
         
         
