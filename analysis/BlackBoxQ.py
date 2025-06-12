@@ -64,7 +64,10 @@ class Mode:
             self.Chi_mat[idx1,idx1] = self.Kerr_self(idx1)
             
             for idx2 in range(self.mode_count):
-                self.Chi_mat[idx1,idx2] = self.Kerr_cross(idx1, idx2)
+                if idx1 != idx2:
+                    self.Chi_mat[idx1,idx2] = self.Kerr_cross(idx1, idx2)
+                else:
+                    continue
                 
         print(f'{self.mode_count} mode found at:')
         print("  ".join(f"{self.format_value(val):>15}" for val in self.f0), end='\n')
