@@ -218,10 +218,8 @@ class Fitter:
 
         
 
-def post_process(files, save = False):
-    all_res = []
-    header = 'xxx'
-    
+def post_process(files, save=False, filename):
+    all_res = []    
     for file in files:
          best_dict = dict(np.load(file).items())
          keys = best_dict.keys()
@@ -234,6 +232,10 @@ def post_process(files, save = False):
     for idx, key in enumerate(keys):
         final_dict[key] = all_res[:,idx]
         final_dict['err_'+key] = all_res[:,idx+1]
+        
+    if save:
+        np.savez(fillename+'_final.npz', **final_dict)
+        print(f"Saved data to {filename+'_final.npz'}")
         
     return final_dict
     
