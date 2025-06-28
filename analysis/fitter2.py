@@ -27,6 +27,7 @@ class Fitter:
         self.model_func = self.models[model_type]
         self.popt = None
         self.pcov = None
+        self.perr = None
 
     # --- Model Functions ---
     @staticmethod
@@ -155,12 +156,20 @@ class Fitter:
     def fit(self, x, y):
         p0 = self.initial_guess(x, y)
         self.popt, self.pcov = curve_fit(self.model_func, x, y, p0=p0)
-        return self.popt, np.sqrt(np.diag(self.pcov))
+        self.err = np.sqrt(np.diag(self.pcov))
+        return self.popt, self.perr
 
     def saveplot(self, x, y, filename="fit_plot.png"):
         if self.popt is None:
             raise RuntimeError("Fit not yet performed.")
+        
+        # Create directory if it doesn't exist
+        directory = os.path.dirname(filename)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+
         yfit = self.model_func(x, *self.popt)
+
         plt.figure()
         plt.plot(x, y, 'o', label='Data')
         plt.plot(x, yfit, '-', label='Fit')
@@ -172,17 +181,17 @@ class Fitter:
         if self.popt is None:
             raise RuntimeError("Fit not yet performed.")
         param_names = self.model_func.__code__.co_varnames[1:self.model_func.__code__.co_argcount]
-        return dict(zip(param_names, self.popt))
+        return dict(zip(param_names, self.popt, self.perr))
 
 
 ##############
 # EXAMPLE
 
-xdata = np.linspace(0, 10, 200)
-ydata = Fitter.lorentzian(xdata, A=5, x0=5, w=1.5) + 0.1*np.random.normal(size=len(xdata))
+# xdata = np.linspace(0, 10, 200)
+# ydata = Fitter.lorentzian(xdata, A=5, x0=5, w=1.5) + 0.1*np.random.normal(size=len(xdata))
 
-fitter = Fitter("S21")
-popt, perr = fitter.fit(xdata, ydata)
+# fitter = Fitter("S21")
+# popt, perr = fitter.fit(xdata, ydata)
 
-print("Best fit params:", fitter.best_fit_params())
-fitter.saveplot(xdata, ydata, "lorentzian_fit.png")
+# print("Best fit params:", fitter.best_fit_params())
+# fitter.saveplot(xdata, ydata, "lorentzian_fit.png")
