@@ -153,13 +153,22 @@ class Fitter:
             return [A, x0, w]
 
     # --- Fit ---
-    def fit(self, x, y):
+    def fit(self, x, y, save=False, file_index = 0, filename = 'fit'):
         p0 = self.initial_guess(x, y)
         self.popt, self.pcov = curve_fit(self.model_func, x, y, p0=p0)
-        self.err = np.sqrt(np.diag(self.pcov))
+        self.perr = np.sqrt(np.diag(self.pcov))
+        
+        if save:
+            # Save figure
+            self.save_plot(x, y, filename=filename+str(file_index).zfill(3)+'.png')
+            # Save best parameters to a dict
+            self.save_param(filename+str(file_index).zfill(3)+'.npz')
+            
+        else:
+            pass
         return self.popt, self.perr
 
-    def saveplot(self, x, y, filename="fit_plot.png"):
+    def save_plot(self, x, y, filename="fit_plot.png"):
         if self.popt is None:
             raise RuntimeError("Fit not yet performed.")
         
@@ -181,8 +190,53 @@ class Fitter:
         if self.popt is None:
             raise RuntimeError("Fit not yet performed.")
         param_names = self.model_func.__code__.co_varnames[1:self.model_func.__code__.co_argcount]
-        return dict(zip(param_names, self.popt, self.perr))
+        # return dict(zip(param_names, self.popt, self.perr))
+        return {name: (val, err) for name, val, err in zip(param_names, self.popt, self.perr)}
+    
+    def save_param(self, filename = 'params.npz'):
+        '''
+        Save the best fit parameters
+        to a file in a compressed python dict.
+        
+        # USE the follwing for re-loading 
+        # res = dict(np.load("params.npz").items())
 
+
+        '''
+        if self.popt is None:
+            raise RuntimeError("Fit not yet performed.")
+        
+        # Create directory if it doesn't exist
+        directory = os.path.dirname(filename)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        best_vals = self.best_fit_params()
+        np.savez(filename, **best_vals)
+        print(f"Saved data to {filename}")
+        pass
+
+        
+
+def post_process(files, save = False):
+    all_res = []
+    header = 'xxx'
+    
+    for file in files:
+         best_dict = dict(np.load(file).items())
+         keys = best_dict.keys()
+         best_vals = np.array([best_dict[key] for key in keys]).flatten()
+         all_res.append(best_vals)
+    
+    all_res = np.array(all_res)
+    
+    final_dict = {}
+    for idx, key in enumerate(keys):
+        final_dict[key] = all_res[:,idx]
+        final_dict['err_'+key] = all_res[:,idx+1]
+        
+    return final_dict
+    
 
 ##############
 # EXAMPLE
@@ -193,5 +247,3 @@ class Fitter:
 # fitter = Fitter("S21")
 # popt, perr = fitter.fit(xdata, ydata)
 
-# print("Best fit params:", fitter.best_fit_params())
-# fitter.saveplot(xdata, ydata, "lorentzian_fit.png")
