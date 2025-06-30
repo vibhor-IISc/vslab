@@ -183,8 +183,6 @@ class FitterComplex:
         plt.gca().set_aspect('equal')
 
         plt.tight_layout()
-        plt.show()
-        
         plt.savefig(filename, dpi=300)
         print(f"Saved plot to {filename}")
 

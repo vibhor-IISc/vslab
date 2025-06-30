@@ -27,14 +27,14 @@ s21_t = da.Z(3)
 s21_i = s21_r*np.cos(s21_t)
 s21_q = s21_r*np.sin(s21_t)
 
-idx = -10
+idx = 0
 s21c = s21_i[idx]+1j*s21_q[idx]
 
 xdata = freq
 yd = s21c
 
 fitter = FitterComplex("S21side")
-popt, perr = fitter.fit(xdata, yd, save=True)
+fitter.fit(xdata, yd, save=True)
 
 
 
