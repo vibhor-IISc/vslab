@@ -8,13 +8,13 @@ from interactivity import enable_click_interaction
 class HDF2DViewer(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("2D HDF Viewer")
-        self.geometry("400x250")
+        self.title("HDF Viewer (2D)")
+        self.geometry("300x200")
         self.filename = None
         self.datasets = []
         self.current_figure = None
         self.cross_section_figure = None
-        self.colormap = tk.StringVar(value="viridis")
+        self.colormap = tk.StringVar(value="seismic")
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -26,8 +26,8 @@ class HDF2DViewer(tk.Tk):
         ttk.Label(self, text="Select Colormap:").pack()
         self.colormap_combo = ttk.Combobox(self, textvariable=self.colormap, state="readonly")
         self.colormap_combo['values'] = [
-            'viridis', 'plasma', 'inferno', 'magma', 'cividis',
-            'Greys', 'seismic', 'jet', 'rainbow', 'coolwarm'
+            'seismic', 'plasma', 'inferno', 'magma', 'cividis',
+            'Greys', 'viridis', 'jet', 'rainbow', 'coolwarm'
         ]
         self.colormap_combo.current(0)
         self.colormap_combo.pack()
