@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 plt.ion()  # Enable interactive mode
 
 def plot_heatmap(data, title="Heatmap", cmap="viridis"):
-    fig = plt.figure()
+    fig = plt.figure(figsize = (4,3))
     ax = fig.add_subplot(111)
     img = ax.imshow(data, aspect='auto', origin='lower', cmap=cmap)
     fig.colorbar(img, label='Value')
-    ax.set_title(f"Heatmap of {title}")
+    ax.set_title(f"{title}")
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     fig.tight_layout()
@@ -17,7 +17,7 @@ def plot_heatmap(data, title="Heatmap", cmap="viridis"):
 
 def plot_cross_sections(data, x, y, fig=None):
     if fig is None or not plt.fignum_exists(fig.number):
-        fig, axs = plt.subplots(2, 1, figsize=(8, 6), constrained_layout=True)
+        fig, axs = plt.subplots(2, 1, figsize=(4, 3), constrained_layout=True)
     else:
         fig.clf()
         axs = fig.subplots(2, 1)
