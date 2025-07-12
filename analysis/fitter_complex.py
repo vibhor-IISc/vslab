@@ -19,7 +19,9 @@ class FitterComplex:
     def __init__(self, model_type="S21"):
         self.models = {"S21": [self.S21, self.S21c],
                        "S21side": [self.S21side, self.S21sidec],
+                       "S21sideF": [self.S21sideF, self.S21sideFc],
                        "S21sideCable": [self.S21sideCable, self.S21sideCablec],
+                       "S21sideCableF": [self.S21sideCableF, self.S21sideCableFc]
                        }
         
         if model_type not in self.models:
@@ -47,20 +49,35 @@ class FitterComplex:
         val = amp*(1/(1+1j*2*(x-x0)/k))
         return np.concatenate([val.real, val.imag])
 
-
     @staticmethod
     def S21sidec(x, x0, ke, k, amp, phi, theta):
-        init_phase = np.exp(1j*theta)
-        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 - 1j*(x-x0)))
+        init_phase = np.exp(-1j*theta)
+        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 + 1j*(x-x0)))
         return init_phase*val
 
     @staticmethod
     def S21side(x, x0, ke, k, amp, phi, theta):
-        init_phase = np.exp(1j*theta)
-        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 - 1j*(x-x0)))
+        init_phase = np.exp(-1j*theta)
+        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 + 1j*(x-x0)))
         
         val = init_phase*val # replacing
         return np.concatenate([val.real, val.imag])
+
+    @staticmethod
+    def S21sideFc(x, x0, ke, ki, amp, phi, tau):
+        init_phase = np.exp(-1j*2*np.pi*x*tau)
+        k = ke*np.cos(phi) + ki
+        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 + 1j*(x-x0)))
+        return init_phase*val
+
+    @staticmethod
+    def S21sideF(x, x0, ke, ki, amp, phi, tau):
+        init_phase = np.exp(-1j*2*np.pi*x*tau)
+        k = ke*np.cos(phi) + ki
+        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 + 1j*(x-x0)))
+        val = init_phase*val # replacing
+        return np.concatenate([val.real, val.imag])
+
     
     @staticmethod
     def S21sideCablec(x, x0, ke, k, amp, phi, theta, tau):
@@ -71,6 +88,22 @@ class FitterComplex:
     @staticmethod
     def S21sideCable(x, x0, ke, k, amp, phi, theta, tau):
         cable_phase = np.exp(1j*(theta - 2*np.pi*x*tau))
+        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 + 1j*(x-x0)))
+        
+        val = cable_phase*val # replacing
+        return np.concatenate([val.real, val.imag])
+
+    @staticmethod
+    def S21sideCableFc(x, x0, ke, ki, amp, phi, theta, tau):
+        cable_phase = np.exp(1j*(theta - 2*np.pi*x*tau))
+        k = ke*np.cos(phi) + ki
+        val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 + 1j*(x-x0)))
+        return cable_phase*val
+
+    @staticmethod
+    def S21sideCableF(x, x0, ke, ki, amp, phi, theta, tau):
+        cable_phase = np.exp(1j*(theta - 2*np.pi*x*tau))
+        k = ke*np.cos(phi) + ki
         val = amp*(1 - 0.5*ke*np.exp(1j*phi)/(k/2 + 1j*(x-x0)))
         
         val = cable_phase*val # replacing
@@ -110,7 +143,6 @@ class FitterComplex:
             else:
                 return np.ptp(x) / 5
         
-
         if self.model_type == 'S21':
             y= np.abs(y)
             amp = np.max(y)
@@ -126,7 +158,19 @@ class FitterComplex:
             phi = 0.19
             theta = np.angle(y[0])
             return [x0, ke, k, amp, phi, theta]
-        
+
+
+        elif self.model_type == 'S21sideF':
+            amp = np.max(np.abs(y))
+            x0 = x[np.argmin(np.abs(y))]
+            k = fwhm3(x, -np.abs(y))
+            ke = k * abs(1 - np.min(np.abs(y)) / amp)
+            phi = 0.19
+            ki = k - ke*np.cos(phi)
+            tau = (-1/2/np.pi)*np.mean(np.gradient(np.unwrap(np.angle(y)), x))
+            return [x0, ke, ki, amp, phi, tau]
+
+
         elif self.model_type == 'S21sideCable':
             amp = np.max(np.abs(y))
             x0 = x[np.argmin(np.abs(y))]
@@ -143,6 +187,24 @@ class FitterComplex:
             theta = np.angle(y[0])
             tau = (-1/2/np.pi)*np.mean(np.gradient(np.unwrap(np.angle(y)), x)[:10])
             return [x0, ke, k, amp, phi, theta, tau]
+
+        elif self.model_type == 'S21sideCableF':
+            amp = np.max(np.abs(y))
+            x0 = x[np.argmin(np.abs(y))]
+            
+            _md = Fitter('S21sideComplex')
+            _ = _md.fit(x, np.abs(y), save=False)
+            
+            # k = fwhm3(x, -np.abs(y))
+            k = _md.best_fit_params()['k']
+            # ke = k * abs(1 - np.min(np.abs(y)) / amp)
+            ke = _md.best_fit_params()['ke']
+            phi = 0.19
+            ki = k - ke*np.cos(phi)
+            theta = np.angle(y[0])
+            tau = (-1/2/np.pi)*np.mean(np.gradient(np.unwrap(np.angle(y)), x)[:10])
+            return [x0, ke, ki, amp, phi, theta, tau]
+
 
 
     # --- Fit ---
