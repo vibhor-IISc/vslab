@@ -185,7 +185,7 @@ class FitterComplex:
 
             phi = 0.19
             theta = np.angle(y[0])
-            tau = (-1/2/np.pi)*np.mean(np.gradient(np.unwrap(np.angle(y)), x)[:10])
+            tau = (-1/2/np.pi)*np.mean(np.gradient(np.unwrap(np.angle(y)), x))
             return [x0, ke, k, amp, phi, theta, tau]
 
         elif self.model_type == 'S21sideCableF':

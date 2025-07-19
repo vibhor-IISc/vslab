@@ -199,6 +199,7 @@ class Fitter:
         plt.plot(x, y, 'o', label='Data')
         plt.plot(x, yfit, '-', label='Fit')
         plt.legend()
+        plt.grid()
         
         filename = dir_name+'fit_'+str(file_index).zfill(4)+'.png'
         plt.savefig(filename, dpi=300)
