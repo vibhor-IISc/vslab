@@ -43,12 +43,11 @@ class S21trace(ParameterWithSetpoints):
 
         '''
         self.root_instrument.write('INIT:CONT OFF')
-        self.root_instrument.write('INIT1')
+        self.root_instrument.write('INIT:IMM')
         # In future for timeouts a sleep function can be added below
-        # sleep(1)
         
         if self.root_instrument.is_complete():
-            _tr = self.root_instrument.ask('TRAC? CH1DATA;*WAI')
+            _tr = self.root_instrument.ask('TRAC? CH1DATA')
             _xy = np.array(_tr.split(',')).astype(float)
         return _xy[0::2]+1j*_xy[1::2]
 
@@ -188,6 +187,14 @@ class ZNB_VNA(VisaInstrument):
                            docstring  = 'Number of sweep points',
                            vals = vals.Ints(min_value = 1, max_value = 12001)
                            )
+        
+        self.add_parameter(name       = 'sweep_time',
+                           unit       = '',
+                           get_parser = float,
+                           set_cmd    = 'SWE:TIME {};*WAI',
+                           get_cmd    = 'SWE:TIME?;*WAI',
+                           docstring  = 'Sweep time',
+                           )
 
         self.add_parameter(name       = 'average_count',
                            unit       = '',
@@ -285,7 +292,8 @@ class ZNB_VNA(VisaInstrument):
         '''
         self.write('*ESE 1')
         try:
-            while not bool(int(self.ask('*OPC; *ESR?'))):
+            self.write('*OPC')
+            while not bool(int(self.ask('*ESR?'))):
                 sleep(1)
             return True
         except KeyboardInterrupt:
