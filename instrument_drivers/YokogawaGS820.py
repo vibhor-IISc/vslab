@@ -280,6 +280,8 @@ class YokogawaChannel(InstrumentChannel):
             DESCRIPTION. The default is 0.
         step_factor : TYPE, optional
             DESCRIPTION. The default is 0.01
+            UNITLESS: 
+            Percentage of the FullScale
         timeout : TYPE, optional
             DESCRIPTION. The default is 5 seconds.
         sleep : float
@@ -289,6 +291,8 @@ class YokogawaChannel(InstrumentChannel):
         Sweep the channel output to target_value within 4 seconds.
         DO NOT USE WITH AUTO RANGE.
         '''
+        if step_factor < 0.01:
+            raise RuntimeError("Too small. allowed values 0.01 to 0.9")
         _start_time = perf_counter()
 
         if self.source_mode.get() == 'current':
