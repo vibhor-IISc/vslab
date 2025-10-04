@@ -11,11 +11,10 @@ import errno
 import numpy as np
 from glob import glob
 from pathlib import Path
-
-
+from typing import Sequence, Optional, Any, List
 from shutil import copy, copy2
 import matplotlib.pyplot as plt
-# import qcodes as qc
+
 from qcodes import initialise_or_create_database_at
 from qcodes import load_or_create_experiment
 from qcodes import config
@@ -157,9 +156,7 @@ def meta_quick(meta_in, meta_out, dims):
 #################################################################################################################
 ##  This part of the codes in under testing
 # Attempt to made - meta_quick.py - as universal writer
-import os
-import glob
-from typing import Sequence, Optional, Any, List
+
 
 
 def _loop_to_meta(l: Any) -> list:
@@ -229,7 +226,7 @@ def meta_quick_list(meta_in: Sequence, meta_out: Optional[Sequence], dims: int =
         filepath = ppath
 
     # Use glob to find .dat files
-    _files = glob.glob(os.path.join(filepath, '*.dat'))
+    _files = glob(os.path.join(filepath, '*.dat'))
     written_files = []
     for file in _files:
         outname = file[:-4] + '.meta.txt'  # strip .dat and append .meta.txt
