@@ -21,13 +21,14 @@ class FitterComplex:
                        "S21side": [self.S21side, self.S21sidec],
                        "S21sideF": [self.S21sideF, self.S21sideFc],
                        "S21sideCable": [self.S21sideCable, self.S21sideCablec],
-                       "S21sideCableF": [self.S21sideCableF, self.S21sideCableFc]
+                       "S21sideCableF": [self.S21sideCableF, self.S21sideCableFc],
+                       "S11cable": [self.S11, self.S11c]
                        }
         
         if model_type not in self.models:
             raise ValueError(f"Unsupported model type '{model_type}'.")
         
-        self.model_type = model_type
+        self.model_type = model_type.
         self.model_func = self.models[model_type][0]
         self.model_eval = self.models[model_type][1]
         self.popt = None
@@ -109,6 +110,16 @@ class FitterComplex:
         val = cable_phase*val # replacing
         return np.concatenate([val.real, val.imag])
     
+    @staticmethod
+    def S11c(x, x0, ke, k, amp):
+        val = amp*(1 - (2*ke/k)/(1+1j*2*(x-x0)/k))
+        return val
+    
+    @staticmethod
+    def S11(x, x0, ke, k, amp):
+        val = amp*(1 - (2*ke/k)/(1+1j*2*(x-x0)/k))
+        return np.concatenate([val.real, val.imag])
+     
 
     # --- Initial Guess ---
     # --- CAUTION -> y is in I+1j*Q format
@@ -204,7 +215,14 @@ class FitterComplex:
             theta = np.angle(y[0])
             tau = (-1/2/np.pi)*np.mean(np.gradient(np.unwrap(np.angle(y)), x)[:10])
             return [x0, ke, ki, amp, phi, theta, tau]
-
+        
+        elif self.model_type == 'S11':
+            y= np.abs(y)
+            amp = np.max(y)
+            x0 = x[np.argmin(y)]
+            k = fwhm(x, -y)
+            ke = 0.2*k
+            return [x0, ke, k, amp]
 
 
     # --- Fit ---
