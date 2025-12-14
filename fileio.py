@@ -497,3 +497,11 @@ def _metagen(dataset, ppath_tag):
 
 
 
+##################################
+# 14-Dec-2025 UPDATE
+
+
+from qcodes.instrument.base import Instrument
+
+def close_all_instruments():
+    Instrument.close_all()
